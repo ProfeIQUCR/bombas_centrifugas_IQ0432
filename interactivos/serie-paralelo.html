@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Bombas en serie y en paralelo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap">
+<style>
+/* Layout: controles del sistema arriba; curva H–Q con las curvas combinadas a la izquierda y la tabla de resultados a la derecha; abajo, la explicación de cada arreglo. */
+:root{
+  --bg:#f4f3ee; --surface:#fbfaf6; --sunk:#eceeea; --ink:#13293d; --muted:#4a5866; --line:#dfe2dd; --faint:#9aa6ae;
+  --accent:#1f6b94; --accent-2:#a8501a; --on-accent:#f4f3ee;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --f-display:'Source Serif 4', Georgia, serif; --f-body:'IBM Plex Sans', Arial, sans-serif; --f-data:'IBM Plex Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --line:#2a3a45; --faint:#5f6f7a;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --s1:#3987e5; --s2:#d95926; --s3:#199e70; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --line:#2a3a45; --faint:#5f6f7a;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --s1:#3987e5; --s2:#d95926; --s3:#199e70; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:16px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); padding-block:28px 48px}
+.wrap{max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:24px}
+header{display:flex; flex-direction:column; gap:8px; max-width:72ch}
+.eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); font-weight:600}
+h1{font-family:var(--f-display); font-weight:700; font-size:clamp(28px,4vw,42px); line-height:1.1; margin:0; text-wrap:balance}
+h2{font-family:var(--f-display); font-weight:600; font-size:22px; margin:0; text-wrap:balance}
+.lead{color:var(--muted); margin:0; font-size:17px}
+.bar{display:flex; flex-wrap:wrap; gap:14px 28px; align-items:flex-end; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 20px}
+.ctl{flex:1 1 240px; display:flex; flex-direction:column; gap:6px; min-width:0}
+.ctl label, .ctl .lab{display:flex; justify-content:space-between; font-weight:500; gap:8px}
+.ctl output{font-family:var(--f-data); color:var(--accent)}
+input[type=range]{width:100%; accent-color:var(--accent)}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; flex-wrap:wrap}
+.seg button{font:inherit; border:0; padding:8px 14px; background:transparent; color:var(--muted); cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
+button:focus-visible, input:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px}
+.grid{display:grid; grid-template-columns:minmax(0,1.45fr) minmax(0,1fr); gap:24px; align-items:start}
+@media (max-width:1000px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:14px; min-width:0}
+.tools{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; justify-content:space-between}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:13.5px; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{display:inline-block; width:18px; height:3px; border-radius:2px}
+.legend i.o{width:12px; height:12px; border-radius:50%; background:transparent!important; border:2.5px solid var(--muted)}
+svg text{font-family:var(--f-body)}
+.chart{width:100%; height:auto; display:block}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-size:14px; font-variant-numeric:tabular-nums}
+th,td{padding:8px 7px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap}
+th{font-weight:600; color:var(--muted); font-size:12.5px}
+th:first-child,td:first-child{text-align:left}
+td .sw{display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:8px; vertical-align:-1px}
+tr.na td{color:var(--muted)}
+.gain{font-size:12.5px; color:var(--muted); display:block}
+.msg{border-left:4px solid var(--accent-2); padding:4px 0 4px 12px; display:flex; flex-direction:column; gap:6px}
+.msg p{margin:0}
+.msg .t{font-weight:600}
+.note{font-size:14px; color:var(--muted); margin:0}
+.cards{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px}
+@media (max-width:860px){.cards{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; gap:8px; min-width:0}
+.card h3{margin:0; font-size:17px}
+.card ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px; color:var(--muted); font-size:15px}
+.assume{font-size:14px; color:var(--muted); display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:6px 24px}
+.assume p{margin:0}
+.theory{display:grid; grid-template-columns:minmax(0,1.45fr) minmax(0,1fr); gap:24px; align-items:start}
+@media (max-width:1000px){.theory{grid-template-columns:minmax(0,1fr)}}
+.steps{display:flex; gap:8px; flex-wrap:wrap}
+.steps button{font:inherit; border:1px solid var(--line); border-radius:999px; padding:6px 14px; background:var(--surface); color:var(--muted); cursor:pointer}
+.steps button[aria-pressed="true"]{background:var(--ink); border-color:var(--ink); color:var(--bg)}
+.step-text{display:flex; flex-direction:column; gap:12px}
+.step-text h3{margin:0; font-size:19px}
+.step-text p{margin:0; color:var(--ink)}
+.step-text .eq{font-family:var(--f-data); font-size:14.5px; background:var(--sunk); border-radius:8px; padding:10px 12px; line-height:1.7; overflow-wrap:anywhere}
+.nav{display:flex; gap:10px; flex-wrap:wrap}
+.nav button{font:inherit; font-weight:500; border-radius:8px; padding:8px 14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer}
+.nav button.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+.nav button:disabled{opacity:.45; cursor:not-allowed}
+.section-tag{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); font-weight:600; margin:8px 0 -8px}
+.check{display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--muted)}
+.check input{accent-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">IQ-0432 · Punto de operación</span>
+    <h1>Dos bombas idénticas en serie o en paralelo</h1>
+    <p class="lead">En serie se suman las cabezas a un mismo caudal; en paralelo se suman los caudales a una misma cabeza. El punto de operación sale de cortar la curva combinada con la del sistema, así que ninguna de las dos duplica nada.</p>
+  </header>
+
+  <p class="section-tag">Primero, el caso teórico</p>
+  <section class="panel" aria-labelledby="t-teo">
+    <div class="tools">
+      <h2 id="t-teo">¿Por qué se esperaría el doble, y por qué no se obtiene?</h2>
+      <div class="steps" role="group" aria-label="Pasos del caso teórico" id="steps">
+        <button type="button" data-s="0" aria-pressed="true">1. La curva sí se duplica</button>
+        <button type="button" data-s="1" aria-pressed="false">2. Por qué el punto no se duplica</button>
+        <button type="button" data-s="2" aria-pressed="false">3. Caso especial: cuándo sí</button>
+      </div>
+    </div>
+    <div class="theory">
+      <svg id="th" class="chart" viewBox="0 0 680 470" role="img" aria-label="Caso teórico de dos bombas idénticas en serie y en paralelo"></svg>
+      <div class="step-text" aria-live="polite">
+        <div id="st-body"></div>
+        <div class="nav">
+          <button type="button" id="st-prev">Anterior</button>
+          <button type="button" id="st-next" class="primary">Siguiente</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="section-tag">Ahora, sistemas reales</p>
+
+  <div class="bar">
+    <div class="ctl" style="flex:0 1 auto">
+      <span class="lab">Tipo de sistema</span>
+      <div class="seg" role="group" aria-label="Tipo de sistema" id="presets">
+        <button type="button" data-p="steep" aria-pressed="false">Mucha fricción</button>
+        <button type="button" data-p="mid" aria-pressed="true">Intermedio</button>
+        <button type="button" data-p="flat" aria-pressed="false">Estática alta</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label for="hs"><span>Cabeza estática, Δz</span><output id="hs-o" for="hs">2,0 m</output></label>
+      <input id="hs" type="range" min="0" max="30" step="0.5" value="2">
+    </div>
+    <div class="ctl">
+      <label for="kk"><span>Fricción del sistema, K</span><output id="kk-o" for="kk">6,8 × 10⁻⁴</output></label>
+      <input id="kk" type="range" min="0.5" max="30" step="0.1" value="6.8">
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="t-hq">
+      <div class="tools">
+        <h2 id="t-hq">Curvas combinadas y curva del sistema</h2>
+        <div class="seg" role="group" aria-label="Arreglo que se muestra" id="views">
+          <button type="button" data-v="all" aria-pressed="true">Los tres</button>
+          <button type="button" data-v="one" aria-pressed="false">Una bomba</button>
+          <button type="button" data-v="ser" aria-pressed="false">Serie</button>
+          <button type="button" data-v="par" aria-pressed="false">Paralelo</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--s3)"></i>Una bomba</span>
+        <span><i style="background:var(--s1)"></i>Dos en serie</span>
+        <span><i style="background:var(--s2)"></i>Dos en paralelo</span>
+        <span><i style="background:var(--ink)"></i>Sistema</span>
+        <span><i class="o"></i>Dónde opera cada bomba</span>
+      </div>
+      <label class="check"><input id="ghost" type="checkbox" checked> Mostrar lo que se esperaría si el punto se duplicara</label>
+      <svg id="hq" class="chart" viewBox="0 0 680 470" role="img" aria-label="Curva de una bomba, curva de dos en serie y de dos en paralelo, con la curva del sistema y los puntos de operación"></svg>
+    </section>
+
+    <section class="panel" aria-labelledby="t-res">
+      <h2 id="t-res">Resultados</h2>
+      <div class="tablewrap">
+        <table aria-describedby="t-res">
+          <thead><tr><th>Arreglo</th><th>Q total<br>(L/min)</th><th>H<br>(m)</th><th>Cada bomba</th><th>η cada<br>bomba</th><th>bhp total<br>(W)</th></tr></thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </div>
+      <p class="note">Debajo de Q y H, el cambio respecto a una sola bomba en el mismo sistema.</p>
+      <div class="msg"><p class="t" id="m-t"></p><p class="note" id="m-d"></p></div>
+    </section>
+  </div>
+
+  <div class="cards">
+    <article class="card">
+      <h3 style="color:var(--s1)">En serie: la descarga de una entra a la succión de la otra</h3>
+      <ul>
+        <li>Pasa el mismo caudal por las dos y cada una aporta su cabeza: H<sub>serie</sub>(Q) = 2 H(Q).</li>
+        <li>Rinde más en sistemas empinados (mucha fricción) o con una cabeza estática mayor que la de cierre de una sola bomba.</li>
+        <li>Cada bomba opera al caudal total y a la mitad de la cabeza total.</li>
+        <li>La carcasa de la segunda bomba trabaja a mayor presión: hay que revisar su presión máxima de diseño y la de los sellos.</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h3 style="color:var(--s2)">En paralelo: las dos toman y descargan en los mismos cabezales</h3>
+      <ul>
+        <li>Las dos dan la misma cabeza y se reparten el caudal: Q<sub>paralelo</sub>(H) = 2 Q(H).</li>
+        <li>Rinde más en sistemas planos (cabeza estática alta y poca fricción). Si la cabeza estática supera la de cierre, no entrega nada.</li>
+        <li>Cada bomba opera a la mitad del caudal total, más cerca del cierre: puede quedar lejos de su BEP.</li>
+        <li>Cada bomba necesita su válvula de retención, para que el flujo no se devuelva por la que esté apagada.</li>
+      </ul>
+    </article>
+  </div>
+
+  <section class="panel" aria-labelledby="t-sup">
+    <h2 id="t-sup">Supuestos</h2>
+    <div class="assume">
+      <p>Dos bombas centrífugas idénticas, con las curvas ilustrativas del módulo: H = 22 − 9,722 × 10⁻⁴ Q² (m, con Q en L/min) y bhp = 190 + 2,31 Q (W).</p>
+      <p>Sistema: H<sub>sis</sub> = Δz + K Q², con K en m/(L/min)². Las pérdidas en las tuberías que unen las dos bombas se desprecian.</p>
+      <p>Agua a 20 °C. η de cada bomba = ρ g Q<sub>bomba</sub> H<sub>bomba</sub> / bhp.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const RG=998*9.81, QM=150.4;
+const H1=q=>22-9.722e-4*q*q, B1=q=>190+2.3125*q;
+const PRE={steep:[2,20],mid:[2,6.8],flat:[16,1.2]};
+const $=id=>document.getElementById(id);
+const fmt=(x,d)=>x.toLocaleString('es-CR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const NS='http://www.w3.org/2000/svg';
+let HS=2, K=6.8e-4, VIEW='all', FK=1;
+const sysH=q=>HS+K*q*q;
+function solve(f,a,b){ if(f(a)<=0) return null; if(f(b)>0) return b; for(let i=0;i<60;i++){ const c=(a+b)/2; if(f(c)>0)a=c; else b=c; } return (a+b)/2; }
+function ops(){ const one=solve(q=>H1(q)-sysH(q),0,QM), ser=solve(q=>2*H1(q)-sysH(q),0,QM), par=solve(q=>H1(q/2)-sysH(q),0,2*QM);
+  const mk=(Q,kind)=>{ if(Q===null) return null; const H=sysH(Q); const qe=kind==='par'?Q/2:Q, he=kind==='ser'?H/2:H, n=kind==='one'?1:2;
+    const b=B1(qe), pw=RG*(qe/60000)*he; return {Q,H,qe,he,eta:pw/b,bhp:n*b}; };
+  return {one:mk(one,'one'),ser:mk(ser,'ser'),par:mk(par,'par')}; }
+function el(s,tag,a,text){ const e=document.createElementNS(NS,tag); for(const k in a) e.setAttribute(k,k==='font-size'?(+a[k]*FK).toFixed(1):a[k]); if(text!=null) e.textContent=text; s.appendChild(e); return e; }
+function draw(o){ const s=$('hq'); s.innerHTML=''; FK=(s.clientWidth&&s.clientWidth<540)?1.5:1;
+  const x0=58,x1=640,y0=24,y1=410,QX=320,HX=46, sx=q=>x0+(x1-x0)*q/QX, sy=h=>y1-(y1-y0)*Math.max(0,Math.min(HX,h))/HX;
+  for(let h=0;h<=45;h+=5){ el(s,'line',{x1:x0,x2:x1,y1:sy(h),y2:sy(h),stroke:'var(--line)'}); el(s,'text',{x:x0-8,y:sy(h)+4,'text-anchor':'end','font-size':12.5,fill:'var(--muted)'},String(h)); }
+  for(let q=0;q<=320;q+=40) el(s,'text',{x:sx(q),y:y1+20,'text-anchor':'middle','font-size':12.5,fill:'var(--muted)'},String(q));
+  el(s,'text',{x:(x0+x1)/2,y:y1+44,'text-anchor':'middle','font-size':14,fill:'var(--ink)'},'Caudal Q (L/min)');
+  el(s,'text',{x:x0,y:y0-8,'font-size':13,'font-weight':600,fill:'var(--ink)'},'H (m)');
+  const path=(fq,q0,q1)=>{ let d=''; const n=160; for(let i=0;i<=n;i++){ const q=q0+(q1-q0)*i/n, h=fq(q); if(h<0) break; d+=(d?'L':'M')+sx(q).toFixed(1)+' '+sy(h).toFixed(1); } return d; };
+  const show=k=>VIEW==='all'||VIEW===k;
+  // sistema
+  let ds='', lq=0; for(let i=0;i<=200;i++){ const q=QX*i/200, h=sysH(q); if(h>HX) break; ds+=(ds?'L':'M')+sx(q).toFixed(1)+' '+sy(h).toFixed(1); lq=q; }
+  el(s,'path',{d:ds,fill:'none',stroke:'var(--ink)','stroke-width':2.5});
+  const lqq=lq*0.97; el(s,'text',{x:sx(lqq)-10,y:sy(sysH(lqq))+4,'text-anchor':'end','font-size':13,'font-weight':600,fill:'var(--ink)'},'Sistema');
+  // curvas
+  const lw=k=>(VIEW===k?3.5:2.5);
+  el(s,'path',{d:path(H1,0,QM),fill:'none',stroke:'var(--s3)','stroke-width':lw('one')});
+  el(s,'text',{x:sx(QM)+6,y:sy(0)-6,'font-size':13,'font-weight':600,fill:'var(--ink)'},'1 bomba');
+  if(show('ser')){ el(s,'path',{d:path(q=>2*H1(q),0,QM),fill:'none',stroke:'var(--s1)','stroke-width':lw('ser')});
+    el(s,'text',{x:sx(18),y:sy(44)-8,'font-size':13,'font-weight':600,fill:'var(--ink)'},'2 en serie');
+    if(VIEW==='ser') [40,80,120].forEach(q=>{ el(s,'line',{x1:sx(q),x2:sx(q),y1:sy(H1(q)),y2:sy(2*H1(q))+6,stroke:'var(--s1)','stroke-width':1.5,'stroke-dasharray':'3 3'}); }); }
+  if(show('par')){ el(s,'path',{d:path(q=>H1(q/2),0,2*QM),fill:'none',stroke:'var(--s2)','stroke-width':lw('par')});
+    el(s,'text',{x:sx(2*QM)-4,y:sy(0)-10,'text-anchor':'end','font-size':13,'font-weight':600,fill:'var(--ink)'},'2 en paralelo');
+    if(VIEW==='par') [6,12,18].forEach(h=>{ const q=Math.sqrt((22-h)/9.722e-4); el(s,'line',{x1:sx(q),x2:sx(2*q)-6,y1:sy(h),y2:sy(h),stroke:'var(--s2)','stroke-width':1.5,'stroke-dasharray':'3 3'}); }); }
+  // puntos
+  const pt=(p,col,kind)=>{ if(!p) return; if(kind!=='one'){ el(s,'line',{x1:sx(p.Q),y1:sy(p.H),x2:sx(p.qe),y2:sy(p.he),stroke:col,'stroke-width':1.5,'stroke-dasharray':'2 4'});
+      el(s,'circle',{cx:sx(p.qe),cy:sy(p.he),r:7,fill:'var(--surface)',stroke:col,'stroke-width':3}); }
+    el(s,'circle',{cx:sx(p.Q),cy:sy(p.H),r:9,fill:col,stroke:'var(--surface)','stroke-width':3}); };
+  if(show('one')) pt(o.one,'var(--s3)','one');
+  if(show('ser')) pt(o.ser,'var(--s1)','ser');
+  if(show('par')) pt(o.par,'var(--s2)','par');
+  if(VIEW!=='all'&&VIEW!=='one') pt(o.one,'var(--s3)','one');
+  if($('ghost').checked&&o.one){ const g=(q,h,col,lab,p)=>{ if(q>QX||h>HX) return; el(s,'circle',{cx:sx(q),cy:sy(h),r:8,fill:'none',stroke:col,'stroke-width':2.5,'stroke-dasharray':'3 3'});
+      el(s,'text',{x:sx(q)+12,y:sy(h)+5,'font-size':12.5,fill:'var(--ink)'},lab);
+      if(p) el(s,'line',{x1:sx(q),y1:sy(h),x2:sx(p.Q),y2:sy(p.H),stroke:col,'stroke-width':1.3,'stroke-dasharray':'2 4',opacity:.7}); };
+    if(show('ser')) g(o.one.Q,2*o.one.H,'var(--s1)','esperado: 2H',o.ser);
+    if(show('par')) g(2*o.one.Q,o.one.H,'var(--s2)','esperado: 2Q',o.par); } }
+function gain(v,v0){ if(!v0) return ''; const d=(v-v0)/v0*100; return '<span class="gain">'+(d>=0?'+':'−')+fmt(Math.abs(d),0)+' %</span>'; }
+function table(o){ const rows=[['one','Una bomba','var(--s3)'],['ser','Dos en serie','var(--s1)'],['par','Dos en paralelo','var(--s2)']];
+  $('tb').innerHTML=rows.map(([k,n,c])=>{ const p=o[k];
+    if(!p) return '<tr class="na"><td><span class="sw" style="background:'+c+'"></span>'+n+'</td><td colspan="5" style="text-align:left">No vence la cabeza estática: Q = 0</td></tr>';
+    const each=k==='one'?'—':fmt(p.qe,0)+' L/min<br>'+fmt(p.he,1)+' m';
+    return '<tr><td><span class="sw" style="background:'+c+'"></span>'+n+'</td><td>'+fmt(p.Q,0)+(k!=='one'&&o.one?gain(p.Q,o.one.Q):'')+'</td><td>'+fmt(p.H,1)+(k!=='one'&&o.one?gain(p.H,o.one.H):'')+'</td><td>'+each+'</td><td>'+fmt(p.eta*100,0)+' %</td><td>'+fmt(p.bhp,0)+'</td></tr>'; }).join(''); }
+function message(o){ let t,d;
+  if(!o.one&&!o.par&&o.ser){ t='Solo el arreglo en serie vence la cabeza estática.'; d='Δz = '+fmt(HS,1)+' m supera la cabeza de cierre de una bomba (22 m). En paralelo la cabeza de cierre sigue siendo 22 m, así que no hay caudal.'; }
+  else if(!o.ser){ t='Ningún arreglo vence la cabeza estática.'; d='Δz = '+fmt(HS,1)+' m es mayor que la cabeza de cierre de dos bombas en serie (44 m).'; }
+  else { const gs=(o.ser.Q-o.one.Q)/o.one.Q*100, gp=(o.par.Q-o.one.Q)/o.one.Q*100;
+    t= gs>gp+1 ? 'En este sistema rinde más el arreglo en serie.' : gp>gs+1 ? 'En este sistema rinde más el arreglo en paralelo.' : 'En este sistema los dos arreglos dan casi el mismo caudal.';
+    d='Con una bomba, '+fmt(o.one.Q,0)+' L/min. En serie el caudal sube '+fmt(gs,0)+' % y en paralelo '+fmt(gp,0)+' %: ninguno lo duplica, porque la curva del sistema sube con Q². '+(gp>gs?'Aquí la curva del sistema es más plana que la de la bomba: sumar caudales a la misma cabeza aprovecha mejor la segunda bomba.':'Aquí la curva del sistema es más empinada que la de la bomba: sumar cabezas al mismo caudal aprovecha mejor la segunda bomba.')+' Revise también la η de cada bomba: el arreglo cambia dónde opera cada una.'; }
+  $('m-t').textContent=t; $('m-d').textContent=d; }
+function update(){ $('hs-o').textContent=fmt(HS,1)+' m'; $('kk-o').textContent=fmt(K*1e4,1)+' × 10⁻⁴';
+  const o=ops(); draw(o); table(o); message(o); }
+function setPreset(p){ const [h,k]=PRE[p]; HS=h; K=k*1e-4; $('hs').value=h; $('kk').value=k;
+  document.querySelectorAll('#presets button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===p)); update(); }
+const clearPre=()=>document.querySelectorAll('#presets button').forEach(b=>b.setAttribute('aria-pressed','false'));
+document.querySelectorAll('#presets button').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.p)));
+document.querySelectorAll('#views button').forEach(b=>b.addEventListener('click',()=>{ VIEW=b.dataset.v; document.querySelectorAll('#views button').forEach(x=>x.setAttribute('aria-pressed',x===b)); update(); }));
+$('hs').addEventListener('input',e=>{ HS=+e.target.value; clearPre(); update(); });
+$('kk').addEventListener('input',e=>{ K=+e.target.value*1e-4; clearPre(); update(); });
+$('ghost').addEventListener('change',update);
+let rw=0; addEventListener('resize',()=>{ clearTimeout(rw); rw=setTimeout(()=>{update(); drawTheory();},150); });
+update();
+
+/* ---------- caso teórico ---------- */
+let STEP=0;
+const TH_SYS={hs:2,K:6.8e-4};
+function drawTheory(){ const s=$('th'); s.innerHTML=''; FK=(s.clientWidth&&s.clientWidth<540)?1.5:1;
+  const x0=58,x1=640,y0=24,y1=410,QX=320,HX=46, sx=q=>x0+(x1-x0)*q/QX, sy=h=>y1-(y1-y0)*Math.max(0,Math.min(HX,h))/HX;
+  for(let h=0;h<=45;h+=5){ el(s,'line',{x1:x0,x2:x1,y1:sy(h),y2:sy(h),stroke:'var(--line)'}); el(s,'text',{x:x0-8,y:sy(h)+4,'text-anchor':'end','font-size':12.5,fill:'var(--muted)'},String(h)); }
+  for(let q=0;q<=320;q+=40) el(s,'text',{x:sx(q),y:y1+20,'text-anchor':'middle','font-size':12.5,fill:'var(--muted)'},String(q));
+  el(s,'text',{x:(x0+x1)/2,y:y1+44,'text-anchor':'middle','font-size':14,fill:'var(--ink)'},'Caudal Q (L/min)');
+  el(s,'text',{x:x0,y:y0-8,'font-size':13,'font-weight':600,fill:'var(--ink)'},'H (m)');
+  const path=(fq,q0,q1)=>{ let d=''; for(let i=0;i<=160;i++){ const q=q0+(q1-q0)*i/160, h=fq(q); if(h<0) break; d+=(d?'L':'M')+sx(q).toFixed(1)+' '+sy(h).toFixed(1); } return d; };
+  const dot=(q,h,col,hollow,r)=>el(s,'circle',{cx:sx(q),cy:sy(h),r:r||8,fill:hollow?'var(--surface)':col,stroke:hollow?col:'var(--surface)','stroke-width':hollow?3:2.5});
+  const lab=(q,h,txt,anchor,dx,dy)=>el(s,'text',{x:sx(q)+(dx||12),y:sy(h)+(dy||5),'text-anchor':anchor||'start','font-size':13,'font-weight':600,fill:'var(--ink)'},txt);
+  const arrow=(xa,ya,xb,yb,col)=>{ el(s,'line',{x1:xa,y1:ya,x2:xb,y2:yb,stroke:col,'stroke-width':1.8,'stroke-dasharray':'4 4'});
+    const a=Math.atan2(yb-ya,xb-xa), L=9; el(s,'path',{d:'M'+xb+' '+yb+'L'+(xb-L*Math.cos(a-0.45))+' '+(yb-L*Math.sin(a-0.45))+'L'+(xb-L*Math.cos(a+0.45))+' '+(yb-L*Math.sin(a+0.45))+'Z',fill:col}); };
+  el(s,'path',{d:path(H1,0,QM),fill:'none',stroke:'var(--s3)','stroke-width':3}); lab(QM,0,'1 bomba','start',6,-8);
+  el(s,'path',{d:path(q=>2*H1(q),0,QM),fill:'none',stroke:'var(--s1)','stroke-width':STEP===0?3:2.2,opacity:STEP===0?1:.85}); lab(14,44,'2 en serie','start',0,-10);
+  el(s,'path',{d:path(q=>H1(q/2),0,2*QM),fill:'none',stroke:'var(--s2)','stroke-width':STEP===0?3:2.2,opacity:STEP===0?1:.85}); lab(2*QM,0,'2 en paralelo','end',-4,-12);
+  if(STEP===0){ [40,80,120].forEach(q=>arrow(sx(q),sy(H1(q)),sx(q),sy(2*H1(q))+6,'var(--s1)'));
+    [6,12,18].forEach(h=>{ const q=Math.sqrt((22-h)/9.722e-4); arrow(sx(q),sy(h),sx(2*q)-6,sy(h),'var(--s2)'); });
+    lab(80,2*H1(80),'×2 en H','start',10,-4); const q12=Math.sqrt(10/9.722e-4); lab(2*q12,12,'×2 en Q','start',8,-8); }
+  if(STEP===2){ const hs=12, q1=Math.sqrt((22-hs)/9.722e-4);
+    el(s,'line',{x1:x0,x2:x1,y1:sy(hs),y2:sy(hs),stroke:'var(--s2)','stroke-width':2.5});
+    el(s,'text',{x:x1,y:sy(hs)-8,'text-anchor':'end','font-size':12.5,fill:'var(--ink)'},'Sistema plano: solo cabeza estática');
+    dot(q1,hs,'var(--s3)'); dot(2*q1,hs,'var(--s2)'); arrow(sx(q1)+10,sy(hs)+18,sx(2*q1)-10,sy(hs)+18,'var(--s2)');
+    el(s,'text',{x:(sx(q1)+sx(2*q1))/2,y:sy(hs)+38,'text-anchor':'middle','font-size':13,'font-weight':600,fill:'var(--ink)'},fmt(q1,0)+' → '+fmt(2*q1,0)+' L/min: Q × 2');
+    const qv=80; el(s,'line',{x1:sx(qv),x2:sx(qv),y1:y0,y2:y1,stroke:'var(--s1)','stroke-width':2.5});
+    el(s,'text',{x:sx(qv)+8,y:sy(40),'font-size':12.5,fill:'var(--ink)'},'Sistema que fija Q');
+    dot(qv,H1(qv),'var(--s3)'); dot(qv,2*H1(qv),'var(--s1)'); arrow(sx(qv)-18,sy(H1(qv))-10,sx(qv)-18,sy(2*H1(qv))+10,'var(--s1)');
+    el(s,'text',{x:sx(qv)-26,y:sy(1.5*H1(qv))+4,'text-anchor':'end','font-size':13,'font-weight':600,fill:'var(--ink)'},fmt(H1(qv),1)+' → '+fmt(2*H1(qv),1)+' m: H × 2'); }
+  if(STEP===1){ const HSs=TH_SYS.hs,KK=TH_SYS.K, sysf=q=>HSs+KK*q*q;
+    let d=''; for(let i=0;i<=200;i++){ const q=QX*i/200, h=sysf(q); if(h>HX) break; d+=(d?'L':'M')+sx(q).toFixed(1)+' '+sy(h).toFixed(1); }
+    el(s,'path',{d,fill:'none',stroke:'var(--ink)','stroke-width':2.8}); el(s,'text',{x:sx(205)+14,y:sy(sysf(205))+26,'font-size':13,'font-weight':600,fill:'var(--ink)'},'Sistema real: Δz + K Q²');
+    const one=solve(q=>H1(q)-sysf(q),0,QM), ser=solve(q=>2*H1(q)-sysf(q),0,QM), par=solve(q=>H1(q/2)-sysf(q),0,2*QM);
+    const h1=sysf(one), hs_=sysf(ser), hp=sysf(par);
+    el(s,'circle',{cx:sx(2*one),cy:sy(h1),r:8,fill:'none',stroke:'var(--s2)','stroke-width':2.5,'stroke-dasharray':'3 3'}); lab(2*one,h1,'esperado: 2Q','start',12,18);
+    el(s,'circle',{cx:sx(one),cy:sy(2*h1),r:8,fill:'none',stroke:'var(--s1)','stroke-width':2.5,'stroke-dasharray':'3 3'}); lab(one,2*h1,'esperado: 2H','end',-12,4);
+    arrow(sx(2*one)-6,sy(h1)-6,sx(par)+8,sy(hp)+8,'var(--s2)'); arrow(sx(one)+8,sy(2*h1)+6,sx(ser)-6,sy(hs_)-8,'var(--s1)');
+    dot(one,h1,'var(--s3)'); dot(ser,hs_,'var(--s1)'); dot(par,hp,'var(--s2)');
+    lab(par,hp,'real: '+fmt(par,0)+' L/min','start',12,-8); lab(ser,hs_,'real: '+fmt(hs_,1)+' m','start',14,24); }
+  }
+function stepText(){ const one=solve(q=>H1(q)-(2+6.8e-4*q*q),0,QM), ser=solve(q=>2*H1(q)-(2+6.8e-4*q*q),0,QM), par=solve(q=>H1(q/2)-(2+6.8e-4*q*q),0,2*QM);
+  const s2=q=>2+6.8e-4*q*q;
+  const T=[
+  '<h3>La curva combinada sí se duplica</h3><p>Con dos bombas idénticas, la suma es exacta (si se desprecian las pérdidas en las tuberías que las unen):</p>'+
+  '<div class="eq">Serie: el mismo Q pasa por las dos → H<sub>serie</sub>(Q) = 2 H(Q)<br>Paralelo: las dos dan la misma H → Q<sub>par</sub>(H) = 2 Q(H)</div>'+
+  '<p>Por eso es natural esperar que la serie duplique la cabeza y el paralelo duplique el caudal. Pero eso describe la <b>curva de las bombas</b>, no el <b>punto de operación</b>.</p>',
+  '<h3>En un sistema real, la fricción se queda con parte de la ganancia</h3><p>Con H<sub>sis</sub> = Δz + K Q², al agregar la segunda bomba sube el caudal, las pérdidas crecen con Q² y el sistema exige más cabeza. El punto se desliza por la curva del sistema: la ganancia se reparte entre Q y H.</p>'+
+  '<div class="eq">Una bomba: '+fmt(one,0)+' L/min y '+fmt(s2(one),1)+' m<br>Paralelo: se esperaba '+fmt(2*one,0)+' L/min → real '+fmt(par,0)+' L/min (+'+fmt((par/one-1)*100,0)+' %)<br>Serie: se esperaba '+fmt(2*s2(one),1)+' m → real '+fmt(s2(ser),1)+' m (+'+fmt((s2(ser)/s2(one)-1)*100,0)+' %)</div>'+
+  '<p>Los puntos esperados sí están sobre las curvas combinadas, pero no sobre la del sistema: el sistema no puede operar ahí. El punto real se corre por la curva combinada hasta cortar la del sistema.</p><p>Cuánto se pierde depende de qué tan empinada sea la curva del sistema. El siguiente paso muestra el caso especial en que no se pierde nada.</p>',
+  '<h3>Caso especial: cuándo sí se duplicaría el punto</h3><p>El punto se duplicaría solo si el sistema no reaccionara al cambio de caudal. Son dos casos límite:</p>'+
+  '<div class="eq">Paralelo + sistema plano (H<sub>sis</sub> = Δz, sin fricción) → Q × 2<br>Serie + sistema que fija el caudal (curva vertical) → H × 2</div>'+
+  '<p>Ningún sistema de tuberías real es así: siempre hay fricción y la cabeza que pide el sistema cambia con el caudal. Por eso estos casos sirven como cota: el arreglo en paralelo se acerca al doble de caudal cuanto más plana sea la curva del sistema, y el arreglo en serie se acerca al doble de cabeza cuanto más empinada sea.</p>'];
+  $('st-body').innerHTML=T[STEP]; $('st-prev').disabled=STEP===0; $('st-next').textContent=STEP===2?'Ir a sistemas reales':'Siguiente';
+  document.querySelectorAll('#steps button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===STEP)); }
+function setStep(k){ STEP=k; stepText(); drawTheory(); }
+document.querySelectorAll('#steps button').forEach(b=>b.addEventListener('click',()=>setStep(+b.dataset.s)));
+$('st-prev').addEventListener('click',()=>{ if(STEP>0) setStep(STEP-1); });
+$('st-next').addEventListener('click',()=>{ if(STEP<2) setStep(STEP+1); else document.querySelector('.bar').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); });
+setStep(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Interpolador de curvas de bomba</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap">
+<style>
+/* Layout: barra de consulta arriba; datos digitalizados a la izquierda, gráfica y resultado a la derecha; guía de digitalización al final. */
+:root{
+  --bg:#f4f3ee; --surface:#fbfaf6; --sunk:#eceeea; --ink:#13293d; --muted:#4a5866; --line:#dfe2dd; --grid:#e3e6e2; --curve:#9aa6ae; --curve-on:#13293d;
+  --accent:#1f6b94; --accent-2:#a8501a; --on-accent:#f4f3ee; --dint:#2a78d6; --ok:#1d7a52; --warn:#a8501a; --bad:#b3261e;
+  --f-display:'Source Serif 4', Georgia, serif; --f-body:'IBM Plex Sans', Arial, sans-serif; --f-data:'IBM Plex Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --line:#2a3a45; --grid:#24333d; --curve:#56656f; --curve-on:#e8ece9;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --dint:#3f8fe8; --ok:#4cc08a; --warn:#f0a46e; --bad:#f07b72; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --line:#2a3a45; --grid:#24333d; --curve:#56656f; --curve-on:#e8ece9;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --dint:#3f8fe8; --ok:#4cc08a; --warn:#f0a46e; --bad:#f07b72; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:16px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); padding-block:28px 48px}
+.wrap{max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:24px}
+header{display:flex; flex-direction:column; gap:8px; max-width:78ch}
+.eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); font-weight:600}
+h1{font-family:var(--f-display); font-weight:700; font-size:clamp(28px,4vw,42px); line-height:1.1; margin:0; text-wrap:balance}
+h2{font-family:var(--f-display); font-weight:600; font-size:22px; margin:0; text-wrap:balance}
+h3{font-size:15px; font-weight:600; margin:0}
+.lead{color:var(--muted); margin:0; font-size:17px}
+p{margin:0}
+.bar{display:flex; flex-wrap:wrap; gap:14px 20px; align-items:flex-end; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 20px}
+.fld{display:flex; flex-direction:column; gap:4px}
+.fld label{font-size:14px; font-weight:500}
+input[type=text], select, textarea{font:inherit; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:8px}
+input[type=text]{width:8.5em; font-family:var(--f-data); padding:8px 10px}
+select{padding:8px 10px}
+textarea{font-family:var(--f-data); font-size:13.5px; line-height:1.45; padding:8px 10px; width:100%; min-height:9.5em; resize:vertical}
+button{font:inherit; font-weight:500; border-radius:8px; padding:8px 14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer}
+button.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+button.ghost{border-color:transparent; background:transparent; color:var(--muted); padding:6px 8px}
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; background:var(--bg)}
+.seg button{border:0; border-radius:0; background:transparent; padding:8px 14px}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
+.main{display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:24px; align-items:start}
+@media (max-width:960px){.main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:14px; min-width:0}
+.row{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end}
+.curves{display:flex; flex-direction:column; gap:12px}
+.cv{border:1px solid var(--line); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px; background:var(--bg)}
+.cv-h{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.cv-h label{font-size:14px; font-weight:500}
+.cv-h input{width:6em}
+.chip{font-size:12.5px; font-weight:600; padding:2px 9px; border-radius:999px; border:1px solid currentColor; font-variant-numeric:tabular-nums}
+.chip.ok{color:var(--ok)} .chip.warn{color:var(--warn)} .chip.bad{color:var(--bad)}
+.cv-h .sp{flex:1}
+.hint{font-size:13px; color:var(--muted)}
+.hint.warn{color:var(--warn)} .hint.bad{color:var(--bad)}
+svg text{font-family:var(--f-body)}
+.chart{width:100%; height:auto; display:block; cursor:crosshair; touch-action:none}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:13.5px; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{display:inline-block; width:18px; height:3px; border-radius:2px}
+.result{display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px 24px; align-items:end; padding:16px 18px; background:var(--ink); color:var(--bg); border-radius:10px}
+.result .k{font-size:14px; letter-spacing:.04em; color:var(--accent-2); grid-column:1/-1}
+.result .v{font-family:var(--f-display); font-size:clamp(34px,5vw,52px); font-weight:700; line-height:1; font-variant-numeric:tabular-nums}
+.result .v2{font-family:var(--f-data); font-size:15px; opacity:.85}
+.result .why{grid-column:1/-1; font-size:14px; opacity:.85}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-size:14.5px; font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12.5px; color:var(--muted); font-weight:600}
+tr.on td{font-weight:600}
+.msgs{display:flex; flex-direction:column; gap:6px}
+.msgs p{border-left:4px solid var(--warn); padding:2px 0 2px 12px; font-size:14px}
+.msgs p.bad{border-color:var(--bad)}
+.guide{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px}
+@media (max-width:860px){.guide{grid-template-columns:minmax(0,1fr)}}
+.guide ol{margin:0; padding-left:1.3em; display:flex; flex-direction:column; gap:8px; max-width:62ch}
+.note{font-size:14px; color:var(--muted)}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">IQ-0432 · Selección de bombas · Paso 6</span>
+    <h1>Interpolador de NPSH requerido y potencia</h1>
+    <p class="lead">Pegue los puntos que digitalizó con ScanIt para cada diámetro de impulsor. La herramienta ajusta una curva por diámetro, la evalúa en el caudal de diseño y, si el diámetro está entre dos curvas, interpola linealmente en el diámetro.</p>
+  </header>
+
+  <div class="bar" role="group" aria-label="Consulta">
+    <div class="fld"><span style="font-size:14px;font-weight:500">Curva</span>
+      <div class="seg" id="tabs"><button type="button" data-t="P" aria-pressed="true">Potencia en el eje</button><button type="button" data-t="N" aria-pressed="false">NPSH requerido</button></div></div>
+    <div class="fld"><label for="qv">Caudal de diseño (<span id="qu-l">m³/h</span>)</label><input id="qv" type="text" inputmode="decimal" value="16"></div>
+    <div class="fld"><label for="dv">Diámetro del impulsor (mm)</label><input id="dv" type="text" inputmode="decimal" value="130"></div>
+    <div class="fld"><label for="meth">Ajuste de cada curva</label>
+      <select id="meth"><option value="pchip">Cúbica monótona (recomendado)</option><option value="lin">Lineal entre puntos</option><option value="poly3">Polinomio de grado 3</option></select></div>
+    <div class="fld"><label for="exsel">Datos de ejemplo</label>
+      <select id="exsel"><option value="">Elegir…</option></select></div>
+  </div>
+
+  <div class="main">
+    <section class="panel" aria-labelledby="t-data">
+      <h2 id="t-data">Puntos digitalizados</h2>
+      <div class="row">
+        <div class="fld"><label for="qu">Unidad de caudal</label>
+          <select id="qu"><option value="1">m³/h</option><option value="3.6">L/s</option><option value="0.06">L/min</option><option value="0.2271247">US gpm</option></select></div>
+        <div class="fld"><label for="yu">Unidad de <span id="yu-l">potencia</span></label><select id="yu"></select></div>
+      </div>
+      <p class="hint">Una curva por diámetro. Cada línea es un punto: caudal y valor separados por tabulador, punto y coma o espacio. Acepta coma o punto decimal y omite encabezados.</p>
+      <div class="curves" id="curves"></div>
+      <div class="row"><button type="button" id="add">Agregar diámetro</button><button type="button" id="clr" class="ghost">Vaciar esta curva</button></div>
+      <p class="note" id="srcnote"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="t-res">
+      <h2 id="t-res">Lectura en el caudal de diseño</h2>
+      <div class="result" id="res" aria-live="polite"></div>
+      <div class="legend" id="legend"></div>
+      <svg id="chart" class="chart" viewBox="0 0 640 400" role="img" aria-label="Curvas ajustadas con la lectura en el caudal de diseño"></svg>
+      <p class="note">Haga clic sobre la gráfica para mover el caudal de diseño.</p>
+      <div class="tablewrap"><table><thead><tr><th>Diámetro</th><th>Puntos</th><th>Rango de Q</th><th id="th-v">Valor en Q</th></tr></thead><tbody id="tb"></tbody></table></div>
+      <div class="msgs" id="msgs"></div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="t-g">
+    <h2 id="t-g">¿Cuántos puntos tomar en ScanIt?</h2>
+    <div class="guide">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <p style="max-width:62ch">Con 6 a 8 puntos por curva el resultado ya no mejora al agregar más. A partir de ahí manda la precisión de cada clic. La tabla compara el error máximo a lo largo de toda la curva para las hojas KDN 32-125 y 32-125.1, con clics que se desvían alrededor de un píxel.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Puntos por curva</th><th>Potencia, cúbica</th><th>Potencia, lineal</th><th>NPSH, cúbica</th><th>NPSH, lineal</th></tr></thead>
+          <tbody>
+            <tr><td>4</td><td>0,039 kW</td><td>0,055 kW</td><td>0,05 m</td><td>0,09 m</td></tr>
+            <tr class="on"><td>6</td><td>0,021 kW</td><td>0,029 kW</td><td>0,02 m</td><td>0,04 m</td></tr>
+            <tr class="on"><td>8</td><td>0,019 kW</td><td>0,020 kW</td><td>0,02 m</td><td>0,03 m</td></tr>
+            <tr><td>10</td><td>0,019 kW</td><td>0,019 kW</td><td>0,02 m</td><td>0,02 m</td></tr>
+          </tbody></table></div>
+        <p class="note">El error en el centro de la curva es menor; el máximo suele estar en los extremos. El polinomio de grado 2 no sirve para la potencia: las curvas tienen forma de S y se aplanan al final, y el error se queda cerca de 0,07 kW aunque se agreguen puntos.</p>
+      </div>
+      <ol>
+        <li><strong>Calibre cada eje con su unidad nativa.</strong> En las hojas DAB, la potencia se calibra con las marcas de kW. En la hoja KDN 32-125.1 el eje secundario en HP está dibujado con 1 HP = 0,693 kW, unos 7 % menos de lo correcto.</li>
+        <li><strong>Tome los dos extremos de cada curva.</strong> La herramienta no extrapola: fuera del rango digitalizado no da valor.</li>
+        <li><strong>Reparta los demás puntos donde la curva cambia de pendiente.</strong> Para potencia, donde empieza a aplanarse; para NPSH, alrededor del mínimo y en la rama que sube.</li>
+        <li><strong>Dé un clic sobre el centro del trazo.</strong> Las líneas del catálogo tienen un grosor del orden de 0,02 kW o 0,02 m, que es el mismo orden del error de la tabla.</li>
+        <li><strong>Exporte en dos columnas, Q y valor,</strong> y pegue cada diámetro en su casilla.</li>
+      </ol>
+    </div>
+  </section>
+  <p class="note">Datos de ejemplo: DAB Pumps, catálogo técnico serie KDN, hojas 32-125 y 32-125.1 a 2900 rpm (50 Hz). En el ejemplo de clase, los puntos de NPSH (Ø105 y Ø140, de 14 a 18 m³/h) se digitalizaron con ScanIt; los demás se tomaron del trazo vectorial del PDF, ocho por curva. Valores aproximados.</p>
+</div>
+
+<script>
+(function(){
+const EX={"KDN 32-125.1 · ejemplo de clase": {"d": "130", "src": "puntos de NPSH digitalizados con ScanIt en clase; potencia tomada del PDF del catálogo", "P": [{"d": "105", "t": "0.00\t0.279\n2.56\t0.318\n5.12\t0.395\n7.68\t0.495\n10.25\t0.585\n12.81\t0.666\n15.37\t0.734\n17.93\t0.768"}, {"d": "110", "t": "0.00\t0.335\n2.68\t0.399\n5.37\t0.488\n8.05\t0.591\n10.74\t0.705\n13.42\t0.817\n16.11\t0.908\n18.79\t0.935"}, {"d": "115", "t": "0.00\t0.410\n2.85\t0.488\n5.70\t0.565\n8.55\t0.684\n11.41\t0.825\n14.26\t0.953\n17.11\t1.052\n19.96\t1.090"}, {"d": "120", "t": "0.00\t0.502\n2.97\t0.578\n5.95\t0.669\n8.92\t0.800\n11.90\t0.952\n14.87\t1.078\n17.85\t1.176\n20.82\t1.220"}, {"d": "125", "t": "0.00\t0.583\n3.13\t0.663\n6.27\t0.778\n9.40\t0.941\n12.53\t1.109\n15.67\t1.253\n18.80\t1.355\n21.93\t1.368"}, {"d": "130", "t": "0.00\t0.676\n3.36\t0.763\n6.71\t0.893\n10.07\t1.106\n13.42\t1.297\n16.78\t1.460\n20.13\t1.591\n23.49\t1.665"}, {"d": "135", "t": "0.00\t0.768\n3.51\t0.866\n7.01\t1.018\n10.52\t1.230\n14.02\t1.458\n17.53\t1.662\n21.03\t1.813\n24.54\t1.857"}, {"d": "140", "t": "0.00\t0.861\n3.71\t0.978\n7.41\t1.156\n11.12\t1.441\n14.82\t1.703\n18.53\t1.924\n22.23\t2.090\n25.94\t2.172"}], "N": [{"d": "105", "t": "14\t0.914\n15.2\t0.983\n16\t1.05\n17\t1.17\n18\t1.3"}, {"d": "140", "t": "14\t0.754\n15.2\t0.777\n16\t0.8\n17\t0.834\n18\t0.88"}]}, "KDN 32-125.1": {"P": [{"d": "105", "t": "0.00\t0.279\n2.56\t0.318\n5.12\t0.395\n7.68\t0.495\n10.25\t0.585\n12.81\t0.666\n15.37\t0.734\n17.93\t0.768"}, {"d": "110", "t": "0.00\t0.335\n2.68\t0.399\n5.37\t0.488\n8.05\t0.591\n10.74\t0.705\n13.42\t0.817\n16.11\t0.908\n18.79\t0.935"}, {"d": "115", "t": "0.00\t0.410\n2.85\t0.488\n5.70\t0.565\n8.55\t0.684\n11.41\t0.825\n14.26\t0.953\n17.11\t1.052\n19.96\t1.090"}, {"d": "120", "t": "0.00\t0.502\n2.97\t0.578\n5.95\t0.669\n8.92\t0.800\n11.90\t0.952\n14.87\t1.078\n17.85\t1.176\n20.82\t1.220"}, {"d": "125", "t": "0.00\t0.583\n3.13\t0.663\n6.27\t0.778\n9.40\t0.941\n12.53\t1.109\n15.67\t1.253\n18.80\t1.355\n21.93\t1.368"}, {"d": "130", "t": "0.00\t0.676\n3.36\t0.763\n6.71\t0.893\n10.07\t1.106\n13.42\t1.297\n16.78\t1.460\n20.13\t1.591\n23.49\t1.665"}, {"d": "135", "t": "0.00\t0.768\n3.51\t0.866\n7.01\t1.018\n10.52\t1.230\n14.02\t1.458\n17.53\t1.662\n21.03\t1.813\n24.54\t1.857"}, {"d": "140", "t": "0.00\t0.861\n3.71\t0.978\n7.41\t1.156\n11.12\t1.441\n14.82\t1.703\n18.53\t1.924\n22.23\t2.090\n25.94\t2.172"}], "N": [{"d": "105", "t": "5.21\t1.74\n7.33\t1.30\n9.44\t1.02\n11.56\t0.89\n13.67\t0.90\n15.79\t1.03\n17.90\t1.27\n20.02\t1.63"}, {"d": "140", "t": "5.04\t1.02\n8.03\t0.83\n11.01\t0.75\n14.00\t0.74\n16.98\t0.83\n19.97\t1.00\n22.95\t1.29\n25.94\t1.72"}], "d": "130"}, "KDN 32-125": {"P": [{"d": "115", "t": "0.00\t0.685\n4.00\t0.744\n7.99\t0.842\n11.99\t1.011\n15.98\t1.186\n19.98\t1.306\n23.97\t1.386\n27.97\t1.411"}, {"d": "120", "t": "0.00\t0.792\n4.30\t0.846\n8.61\t0.968\n12.91\t1.154\n17.22\t1.358\n21.52\t1.500\n25.83\t1.574\n30.13\t1.590"}, {"d": "125", "t": "0.00\t0.901\n4.56\t0.969\n9.11\t1.104\n13.67\t1.330\n18.22\t1.513\n22.78\t1.659\n27.33\t1.761\n31.89\t1.783"}, {"d": "130", "t": "0.00\t1.010\n4.86\t1.103\n9.72\t1.264\n14.58\t1.542\n19.44\t1.773\n24.30\t1.965\n29.16\t2.115\n34.02\t2.186"}, {"d": "135", "t": "0.00\t1.133\n5.13\t1.231\n10.27\t1.439\n15.40\t1.731\n20.54\t2.002\n25.67\t2.237\n30.81\t2.417\n35.94\t2.488"}, {"d": "142", "t": "0.00\t1.273\n5.42\t1.369\n10.83\t1.656\n16.25\t2.012\n21.66\t2.308\n27.08\t2.564\n32.50\t2.789\n37.91\t2.983"}], "N": [{"d": "115", "t": "5.97\t0.93\n9.11\t0.93\n12.25\t1.01\n15.40\t1.18\n18.54\t1.42\n21.68\t1.73\n24.83\t2.09\n27.97\t2.51"}, {"d": "142", "t": "8.93\t0.80\n13.08\t0.92\n17.23\t1.07\n21.39\t1.26\n25.54\t1.46\n29.69\t1.70\n33.84\t2.00\n38.00\t2.46"}], "d": "125"}};
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+const fmt=(x,d)=>x.toLocaleString('es-CR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const num=s=>{ const v=parseFloat(String(s).trim().replace(',','.')); return isFinite(v)?v:null; };
+const YU={P:[{l:'kW',f:1,alt:{l:'HP',f:1/0.7457}},{l:'HP',f:0.7457,alt:{l:'kW',f:1}}], N:[{l:'m',f:1,alt:{l:'ft',f:1/0.3048}},{l:'ft',f:0.3048,alt:{l:'m',f:1}}]};
+const NAME={P:'potencia',N:'NPSH requerido'};
+const SYM={P:'P',N:'NPSH_R'};
+const DEC={P:3,N:2};
+const blank=()=>({qu:'1',yu:0,src:'',curves:[{d:'',t:''},{d:'',t:''}]});
+let S={tab:'P',meth:'pchip',q:'16',d:'130',P:blank(),N:blank()};
+try{ const s=JSON.parse(localStorage.getItem('interp-curvas-v1')||'null'); if(s&&s.P&&s.N) S=s; }catch(e){}
+function save(){ try{ localStorage.setItem('interp-curvas-v1',JSON.stringify(S)); }catch(e){} }
+
+/* ---------- parsing ---------- */
+function parse(text){
+  const pts=[]; let bad=0;
+  text.split(/\r?\n/).forEach(line=>{ const s=line.trim(); if(!s) return; let parts;
+    if(/[\t;]/.test(s)) parts=s.split(/[\t;]+/).map(x=>x.replace(',','.'));
+    else if(/\s/.test(s)) parts=s.split(/\s+/).map(x=>x.replace(',','.'));
+    else parts=s.split(',');
+    const a=parseFloat(parts[0]), b=parseFloat(parts[1]);
+    if(parts.length>=2&&isFinite(a)&&isFinite(b)) pts.push([a,b]); else bad++; });
+  pts.sort((p,q)=>p[0]-q[0]);
+  const out=[]; pts.forEach(p=>{ const l=out[out.length-1]; if(l&&Math.abs(l[0]-p[0])<1e-9){ l[1]=(l[1]+p[1])/2; } else out.push(p.slice()); });
+  return {pts:out,bad};
+}
+/* ---------- curve fits ---------- */
+function linF(x,y){ return q=>{ for(let i=1;i<x.length;i++) if(q<=x[i]){ const t=(q-x[i-1])/(x[i]-x[i-1]); return y[i-1]+t*(y[i]-y[i-1]); } return y[y.length-1]; }; }
+function pchipF(x,y){ const n=x.length; if(n<3) return linF(x,y);
+  const h=[],d=[]; for(let i=0;i<n-1;i++){ h.push(x[i+1]-x[i]); d.push((y[i+1]-y[i])/h[i]); }
+  const m=new Array(n).fill(0);
+  for(let k=1;k<n-1;k++){ if(d[k-1]*d[k]>0){ const w1=2*h[k]+h[k-1], w2=h[k]+2*h[k-1]; m[k]=(w1+w2)/(w1/d[k-1]+w2/d[k]); } }
+  const end=(h0,h1,d0,d1)=>{ let v=((2*h0+h1)*d0-h0*d1)/(h0+h1); if(Math.sign(v)!==Math.sign(d0)) v=0; else if(Math.sign(d0)!==Math.sign(d1)&&Math.abs(v)>3*Math.abs(d0)) v=3*d0; return v; };
+  m[0]=end(h[0],h[1],d[0],d[1]); m[n-1]=end(h[n-2],h[n-3],d[n-2],d[n-3]);
+  return q=>{ let i=0; while(i<n-2&&q>x[i+1]) i++; const t=(q-x[i])/h[i], t2=t*t, t3=t2*t;
+    return (2*t3-3*t2+1)*y[i]+(t3-2*t2+t)*h[i]*m[i]+(-2*t3+3*t2)*y[i+1]+(t3-t2)*h[i]*m[i+1]; };
+}
+function polyF(x,y,deg){ const n=x.length; if(n<=deg) return null;
+  const xm=(x[0]+x[n-1])/2, xs=(x[n-1]-x[0])/2||1; const A=[],B=[];
+  for(let r=0;r<=deg;r++){ A.push(new Array(deg+1).fill(0)); B.push(0); }
+  for(let i=0;i<n;i++){ const t=(x[i]-xm)/xs; const p=[]; for(let k=0;k<=deg;k++) p.push(Math.pow(t,k));
+    for(let r=0;r<=deg;r++){ B[r]+=p[r]*y[i]; for(let c=0;c<=deg;c++) A[r][c]+=p[r]*p[c]; } }
+  for(let c=0;c<=deg;c++){ let piv=c; for(let r=c+1;r<=deg;r++) if(Math.abs(A[r][c])>Math.abs(A[piv][c])) piv=r;
+    [A[c],A[piv]]=[A[piv],A[c]]; [B[c],B[piv]]=[B[piv],B[c]];
+    for(let r=0;r<=deg;r++){ if(r===c) continue; const f=A[r][c]/A[c][c]; for(let k=c;k<=deg;k++) A[r][k]-=f*A[c][k]; B[r]-=f*B[c]; } }
+  const co=B.map((b,i)=>b/A[i][i]);
+  return q=>{ const t=(q-xm)/xs; let s=0; for(let k=deg;k>=0;k--) s=s*t+co[k]; return s; };
+}
+function fitCurve(pts,meth){ const x=pts.map(p=>p[0]), y=pts.map(p=>p[1]);
+  if(pts.length<2) return null;
+  if(meth==='lin'||pts.length===2) return {f:linF(x,y),used:'lin'};
+  if(meth==='poly3'){ const f=polyF(x,y,3); return f?{f,used:'poly3'}:{f:linF(x,y),used:'lin'}; }
+  return {f:pchipF(x,y),used:'pchip'};
+}
+
+/* ---------- model ---------- */
+function model(){ const T=S[S.tab], qf=parseFloat(T.qu), yf=YU[S.tab][T.yu].f;
+  const cs=T.curves.map((c,i)=>{ const P=parse(c.t), pts=P.pts.map(p=>[p[0]*qf,p[1]*yf]); const d=num(c.d);
+    const fit=fitCurve(pts,S.meth); let gap=0; for(let k=1;k<pts.length;k++) gap=Math.max(gap,pts[k][0]-pts[k-1][0]);
+    const rng=pts.length?pts[pts.length-1][0]-pts[0][0]:0;
+    return {i,d,pts,bad:P.bad,fit,gapR:rng?gap/rng:0,q0:pts.length?pts[0][0]:null,q1:pts.length?pts[pts.length-1][0]:null}; });
+  const q=num(S.q)===null?null:num(S.q)*qf, D=num(S.d);
+  const valid=cs.filter(c=>c.fit&&c.d!==null);
+  valid.forEach(c=>{ c.v=(q!==null&&q>=c.q0-1e-9&&q<=c.q1+1e-9)?c.fit.f(q):null; });
+  const msgs=[]; let out=null;
+  const ds=valid.slice().sort((a,b)=>a.d-b.d);
+  if(q===null) msgs.push(['bad','Escriba el caudal de diseño.']);
+  else if(D===null) msgs.push(['bad','Escriba el diámetro del impulsor.']);
+  else if(!ds.length) msgs.push(['bad','Pegue al menos una curva con su diámetro.']);
+  else { const exact=ds.find(c=>Math.abs(c.d-D)<1e-6);
+    if(exact){ if(exact.v===null) msgs.push(['bad','El caudal está fuera del rango digitalizado de Ø'+fmt(exact.d,0)+'. Agregue puntos que lo cubran.']); else out={v:exact.v,how:'exact',a:exact}; }
+    else { let a=null,b=null; for(let k=1;k<ds.length;k++) if(ds[k-1].d<D&&D<ds[k].d){ a=ds[k-1]; b=ds[k]; }
+      if(!a){ msgs.push(['bad','Ø'+fmt(D,0)+' está fuera de los diámetros cargados ('+ds.map(c=>'Ø'+fmt(c.d,0)).join(', ')+'). No se extrapola en el diámetro.']); }
+      else if(a.v===null||b.v===null){ msgs.push(['bad','El caudal está fuera del rango digitalizado de '+[a,b].filter(c=>c.v===null).map(c=>'Ø'+fmt(c.d,0)).join(' y ')+'.']); }
+      else { const f=(D-a.d)/(b.d-a.d); out={v:a.v+f*(b.v-a.v),how:'interp',a,b,f}; } } }
+  cs.forEach(c=>{ const lab=c.d!==null?'Ø'+fmt(c.d,0):'Curva '+(c.i+1);
+    if(c.bad) msgs.push(['warn',lab+': se omitieron '+c.bad+' línea(s) que no tenían dos números.']);
+    if(c.pts.length&&c.d===null) msgs.push(['warn','Curva '+(c.i+1)+': falta el diámetro.']);
+    if(c.pts.length>=2&&c.pts.length<5) msgs.push(['warn',lab+': '+c.pts.length+' puntos. Tome al menos 5 alrededor del caudal de diseño, o de 6 a 8 si va a cubrir toda la curva.']);
+    if(c.pts.length>=4&&c.gapR>0.35) msgs.push(['warn',lab+': hay un tramo sin puntos de '+Math.round(c.gapR*100)+' % del rango. Agregue uno en medio.']); });
+  if(S.meth==='poly3'&&cs.some(c=>c.fit&&c.fit.used!=='poly3')) msgs.push(['warn','Las curvas con menos de 4 puntos se ajustaron con rectas entre puntos.']);
+  return {cs,q,D,out,msgs,qf,yf};
+}
+
+/* ---------- rendering ---------- */
+function el(p,tag,a,txt){ const e=document.createElementNS(NS,tag); for(const k in a) e.setAttribute(k,a[k]); if(txt!=null) e.textContent=txt; p.appendChild(e); return e; }
+function nice(v){ if(v<=0) return 1; const e=Math.pow(10,Math.floor(Math.log10(v))), m=v/e; return (m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10)*e; }
+function renderCurves(){ const T=S[S.tab], box=$('curves'); box.innerHTML='';
+  T.curves.forEach((c,i)=>{ const d=document.createElement('div'); d.className='cv';
+    d.innerHTML='<div class="cv-h"><label for="cd'+i+'">Ø (mm)</label><input type="text" inputmode="decimal" id="cd'+i+'"><span class="chip" id="ck'+i+'"></span><span class="sp"></span><button type="button" class="ghost" data-del="'+i+'" aria-label="Quitar esta curva">Quitar</button></div><label class="sr" for="ct'+i+'">Puntos de la curva '+(i+1)+'</label><textarea id="ct'+i+'" spellcheck="false" placeholder="Q\tvalor&#10;0,00\t0,901&#10;4,56\t0,969&#10;…"></textarea>';
+    box.appendChild(d); const di=d.querySelector('#cd'+i), ti=d.querySelector('#ct'+i); di.value=c.d; ti.value=c.t;
+    di.addEventListener('input',()=>{ c.d=di.value; update(); }); ti.addEventListener('input',()=>{ c.t=ti.value; update(); });
+    d.querySelector('[data-del]').addEventListener('click',()=>{ T.curves.splice(i,1); if(!T.curves.length) T.curves.push({d:'',t:''}); renderAll(); }); });
+}
+function renderControls(){ const T=S[S.tab];
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===S.tab)));
+  $('yu-l').textContent=NAME[S.tab]; const yu=$('yu'); yu.innerHTML=YU[S.tab].map((u,i)=>'<option value="'+i+'">'+u.l+'</option>').join(''); yu.value=String(T.yu);
+  $('qu').value=T.qu; $('qu-l').textContent=$('qu').selectedOptions[0].textContent;
+  $('meth').value=S.meth; $('qv').value=S.q; $('dv').value=S.d;
+  $('srcnote').textContent=T.src?('Cargado: '+T.src+'. Puede editar o reemplazar los puntos.'):'';
+  $('th-v').textContent=SYM[S.tab]+' en Q ('+YU[S.tab][T.yu].l+')';
+}
+function update(){ const M=model(), T=S[S.tab], U=YU[S.tab][T.yu], dec=DEC[S.tab];
+  const show=v=>fmt(v/U.f,U.l==='HP'||U.l==='ft'?2:dec);
+  // chips
+  M.cs.forEach(c=>{ const k=$('ck'+c.i); if(!k) return; const n=c.pts.length; k.textContent=n+' puntos'; k.className='chip '+(n>=5?'ok':n>=4?'warn':'bad'); });
+  // result
+  const r=$('res'), qs=$('qu').selectedOptions[0].textContent;
+  if(M.out){ const v=M.out.v; const altv=(U.l==='kW'||U.l==='m')? v*U.alt.f : v; const altl=U.alt.l;
+    const why=M.out.how==='exact'?'Leído sobre la curva Ø'+fmt(M.out.a.d,0)+' graficada.'
+      :'Entre Ø'+fmt(M.out.a.d,0)+' ('+show(M.out.a.v)+') y Ø'+fmt(M.out.b.d,0)+' ('+show(M.out.b.v)+'), fracción '+fmt(M.out.f,2)+' en el diámetro.';
+    r.innerHTML='<span class="k">'+SYM[S.tab]+' · Ø'+fmt(M.D,0)+' mm · Q = '+S.q+' '+qs+'</span><span class="v">'+show(v)+' '+U.l+'</span><span class="v2">= '+fmt(altv,2)+' '+altl+'</span><span class="why">'+why+'</span>';
+  } else { r.innerHTML='<span class="k">'+SYM[S.tab]+'</span><span class="v">—</span><span class="v2"></span><span class="why">'+(M.msgs.find(m=>m[0]==='bad')||['','Sin datos'])[1]+'</span>'; }
+  // table
+  const tb=$('tb'); tb.innerHTML=''; M.cs.filter(c=>c.pts.length).sort((a,b)=>(a.d??1e9)-(b.d??1e9)).forEach(c=>{ const on=M.out&&(M.out.a===c||M.out.b===c);
+    const tr=document.createElement('tr'); if(on) tr.className='on';
+    tr.innerHTML='<td>'+(c.d!==null?'Ø'+fmt(c.d,0):'—')+'</td><td>'+c.pts.length+'</td><td>'+fmt(c.q0/M.qf,1)+' – '+fmt(c.q1/M.qf,1)+'</td><td>'+(c.v==null?'fuera de rango':show(c.v))+'</td>'; tb.appendChild(tr); });
+  // messages
+  $('msgs').innerHTML=M.msgs.filter(m=>m[0]==='warn').map(m=>'<p>'+m[1]+'</p>').join('');
+  drawChart(M,U); save();
+}
+function drawChart(M,U){ const s=$('chart'); s.innerHTML='';
+  const x0=58,x1=622,y0=16,y1=352; const cs=M.cs.filter(c=>c.pts.length);
+  const qmaxD=Math.max(1,...cs.map(c=>c.q1/M.qf), M.q!==null?M.q/M.qf:0);
+  const ymaxD=Math.max(0.1,...cs.map(c=>Math.max(...c.pts.map(p=>p[1]/U.f))));
+  const qs=nice(qmaxD/7), ys=nice(ymaxD/6); const QX=Math.ceil(qmaxD/qs)*qs, YX=Math.ceil(ymaxD*1.08/ys)*ys;
+  const sx=q=>x0+(x1-x0)*(q/M.qf)/QX, sy=v=>y1-(y1-y0)*(v/U.f)/YX;
+  const decs=v=>{ const t=String(+v.toPrecision(6)); return t.includes('.')?Math.min(3,t.split('.')[1].length):0; }; const dq=decs(qs), dy=decs(ys);
+  for(let q=0;q<=QX+1e-9;q+=qs){ const X=x0+(x1-x0)*q/QX; el(s,'line',{x1:X,x2:X,y1:y0,y2:y1,stroke:'var(--grid)'}); el(s,'text',{x:X,y:y1+18,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},fmt(q,dq)); }
+  for(let v=0;v<=YX+1e-9;v+=ys){ const Y=y1-(y1-y0)*v/YX; el(s,'line',{x1:x0,x2:x1,y1:Y,y2:Y,stroke:'var(--grid)'}); el(s,'text',{x:x0-7,y:Y+4,'text-anchor':'end','font-size':12,fill:'var(--muted)'},fmt(v,dy)); }
+  el(s,'text',{x:(x0+x1)/2,y:y1+40,'text-anchor':'middle','font-size':13,fill:'var(--ink)'},'Q ('+$('qu').selectedOptions[0].textContent+')');
+  el(s,'text',{x:x0+6,y:y0+12,'font-size':12.5,'font-weight':600,fill:'var(--ink)'},SYM[S.tab]+' ('+U.l+')');
+  const on=c=>M.out&&(M.out.a===c||M.out.b===c);
+  cs.forEach(c=>{ if(!c.fit) return; const col=on(c)?'var(--curve-on)':'var(--curve)'; let d='';
+    for(let k=0;k<=120;k++){ const q=c.q0+(c.q1-c.q0)*k/120; d+=(k?'L':'M')+sx(q).toFixed(1)+' '+sy(c.fit.f(q)).toFixed(1); }
+    el(s,'path',{d,fill:'none',stroke:col,'stroke-width':on(c)?2.4:1.6});
+    c.pts.forEach(p=>el(s,'circle',{cx:sx(p[0]).toFixed(1),cy:sy(p[1]).toFixed(1),r:3.4,fill:'var(--surface)',stroke:col,'stroke-width':1.5}));
+    if(c.d!==null){ const p=c.pts[c.pts.length-1]; el(s,'text',{x:Math.min(sx(p[0])+5,x1-28),y:sy(c.fit.f(c.q1))-5,'font-size':11.5,'font-weight':600,fill:'var(--ink)'},'Ø'+fmt(c.d,0)); } });
+  if(M.out&&M.out.how==='interp'){ const a=M.out.a,b=M.out.b,f=M.out.f; const lo=Math.max(a.q0,b.q0), hi=Math.min(a.q1,b.q1); let d='';
+    for(let k=0;k<=100;k++){ const q=lo+(hi-lo)*k/100; d+=(k?'L':'M')+sx(q).toFixed(1)+' '+sy(a.fit.f(q)+f*(b.fit.f(q)-a.fit.f(q))).toFixed(1); }
+    el(s,'path',{d,fill:'none',stroke:'var(--dint)','stroke-width':2.4,'stroke-dasharray':'7 4'}); }
+  if(M.q!==null){ const X=sx(M.q); if(X>=x0&&X<=x1){
+    if(M.out){ const Y=sy(M.out.v); el(s,'line',{x1:X,x2:X,y1:y1,y2:Y,stroke:'var(--accent-2)','stroke-width':1.8});
+      el(s,'line',{x1:x0,x2:X,y1:Y,y2:Y,stroke:'var(--accent-2)','stroke-width':1.8,'stroke-dasharray':'5 4'});
+      el(s,'circle',{cx:X,cy:Y,r:6,fill:'var(--accent-2)',stroke:'var(--surface)','stroke-width':2}); }
+    else el(s,'line',{x1:X,x2:X,y1:y0,y2:y1,stroke:'var(--accent-2)','stroke-width':1.8,'stroke-dasharray':'3 4'}); } }
+  s._map={x0,x1,QX};
+  $('legend').innerHTML='<span><i style="background:var(--curve)"></i>Curva ajustada</span><span><i style="background:transparent;border:1.5px solid var(--curve-on);width:9px;height:9px;border-radius:50%"></i>Punto digitalizado</span><span><i style="background:repeating-linear-gradient(90deg,var(--dint) 0 6px,transparent 6px 10px)"></i>Diámetro interpolado</span><span><i style="background:var(--accent-2)"></i>Lectura</span>';
+}
+function renderAll(){ renderControls(); renderCurves(); update(); }
+
+/* ---------- events ---------- */
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{ S.tab=b.dataset.t; renderAll(); }));
+$('qv').addEventListener('input',e=>{ S.q=e.target.value; update(); });
+$('dv').addEventListener('input',e=>{ S.d=e.target.value; update(); });
+$('meth').addEventListener('change',e=>{ S.meth=e.target.value; update(); });
+$('qu').addEventListener('change',e=>{ const T=S[S.tab], old=parseFloat(T.qu), nw=parseFloat(e.target.value); const q=num(S.q); if(q!==null) S.q=fmt(q*old/nw,2).replace(/\s/g,'');
+  T.qu=e.target.value; S[S.tab==='P'?'N':'P'].qu=e.target.value; renderControls(); update(); });
+$('yu').addEventListener('change',e=>{ S[S.tab].yu=parseInt(e.target.value,10); renderControls(); update(); });
+$('add').addEventListener('click',()=>{ S[S.tab].curves.push({d:'',t:''}); renderCurves(); update(); });
+$('clr').addEventListener('click',()=>{ S[S.tab]={...blank(),qu:S[S.tab].qu}; renderAll(); });
+const ex=$('exsel'); Object.keys(EX).forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; ex.appendChild(o); });
+function loadEx(k){ ['P','N'].forEach(t=>{ S[t]={qu:'1',yu:0,src:k+', '+(EX[k].src||'hoja del catálogo'),curves:EX[k][t].map(c=>({d:c.d,t:c.t.replace(/\./g,',')}))}; }); S.q='16'; S.d=EX[k].d||S.d; renderAll(); }
+ex.addEventListener('change',()=>{ if(ex.value) loadEx(ex.value); ex.value=''; });
+$('chart').addEventListener('pointerdown',e=>{ const s=$('chart'), m=s._map; if(!m) return; const r=s.getBoundingClientRect(); const X=(e.clientX-r.left)*640/r.width;
+  if(X<m.x0||X>m.x1) return; const q=m.QX*(X-m.x0)/(m.x1-m.x0); S.q=fmt(q,1).replace(/\s/g,''); $('qv').value=S.q; update(); });
+
+if(!S.P.curves.some(c=>c.t.trim())) loadEx('KDN 32-125.1 · ejemplo de clase'); else renderAll();
+})();
+</script>
+</body>
+</html>

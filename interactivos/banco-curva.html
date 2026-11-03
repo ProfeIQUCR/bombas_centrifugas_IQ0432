@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Banco de pruebas de bomba</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap">
+<style>
+/* Layout: banco de pruebas (esquema + instrumentos) a la izquierda, curvas a la derecha; cálculo y tabla debajo. */
+:root{
+  --bg:#f4f3ee; --surface:#fbfaf6; --sunk:#eceeea; --ink:#13293d; --muted:#4a5866; --faint:#7d8b97; --line:#dfe2dd;
+  --accent:#1f6b94; --accent-2:#a8501a; --on-accent:#f4f3ee; --warn-bg:#f6e6d8;
+  --water:#cfe3ee; --steel:#5d6b76; --steel-2:#8996a0;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --f-display:'Source Serif 4', Georgia, serif; --f-body:'IBM Plex Sans', Arial, sans-serif; --f-data:'IBM Plex Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --faint:#7f8f9a; --line:#2a3a45;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --warn-bg:#3a2a1e;
+  --water:#23465a; --steel:#9aa8b2; --steel-2:#6c7b86;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --faint:#7f8f9a; --line:#2a3a45;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --warn-bg:#3a2a1e;
+  --water:#23465a; --steel:#9aa8b2; --steel-2:#6c7b86;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:16px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); padding-block:28px 48px}
+.wrap{max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:24px}
+header{display:flex; flex-direction:column; gap:8px; max-width:70ch}
+.eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); font-weight:600}
+h1{font-family:var(--f-display); font-weight:700; font-size:clamp(28px,4vw,42px); line-height:1.1; margin:0; text-wrap:balance}
+h2{font-family:var(--f-display); font-weight:600; font-size:22px; margin:0; text-wrap:balance}
+.lead{color:var(--muted); margin:0; font-size:17px}
+.modebar{display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 20px}
+.modebar .k{font-weight:600}
+.modebar p{margin:0; color:var(--muted); font-size:15px; flex:1 1 320px; min-width:0}
+.grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.35fr); gap:24px; align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:16px; min-width:0}
+.panel-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap}
+.tag{font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+svg text{font-family:var(--f-body)}
+#bench{width:100%; height:auto; display:block}
+.valve-row{display:flex; flex-direction:column; gap:8px}
+.valve-row label{display:flex; justify-content:space-between; font-weight:500}
+.valve-row output{font-family:var(--f-data); color:var(--accent)}
+input[type=range]{width:100%; accent-color:var(--accent)}
+.instr{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px}
+@media (max-width:520px){.instr{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ins{background:var(--sunk); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:2px; min-width:0}
+.ins .k{font-size:12px; color:var(--muted)}
+.ins .v{font-family:var(--f-data); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums}
+.ins .u{font-size:12px; color:var(--muted)}
+.missing{font-size:14px; background:var(--warn-bg); border-radius:8px; padding:10px 12px; margin:0}
+.btns{display:flex; flex-wrap:wrap; gap:10px}
+button{font:inherit; font-weight:500; border-radius:8px; padding:9px 14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer}
+button.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+button:disabled{opacity:.5; cursor:not-allowed}
+button:focus-visible, input:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px}
+.check{display:flex; align-items:center; gap:8px; font-size:15px; color:var(--muted)}
+.check input{accent-color:var(--accent)}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; flex-wrap:wrap}
+.seg button{border:0; border-radius:0; padding:7px 12px; background:transparent; color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
+.tools{display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between}
+.chart-box{position:relative}
+#chart{width:100%; height:auto; display:block; touch-action:none}
+.tip{position:absolute; pointer-events:none; background:var(--ink); color:var(--bg); border-radius:8px; padding:8px 10px; font-size:13px; line-height:1.4; font-family:var(--f-data); white-space:nowrap; transform:translate(-50%,-100%)}
+.legend{display:flex; gap:16px; flex-wrap:wrap; font-size:14px; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{display:inline-block; width:18px; height:3px; border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--muted) 0 5px,transparent 5px 9px)!important; height:2px}
+.status{font-size:14px; color:var(--muted); min-height:1.5em; margin:0}
+.lower{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.35fr); gap:24px; align-items:start}
+@media (max-width:980px){.lower{grid-template-columns:minmax(0,1fr)}}
+.calc{display:flex; flex-direction:column; gap:10px}
+#calc-body{display:flex; flex-direction:column; gap:10px}
+.eq{font-family:var(--f-data); font-size:14.5px; background:var(--sunk); border-radius:8px; padding:10px 12px; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; line-height:1.6}
+.eq b{color:var(--accent)}
+.eq .lbl{display:block; font-family:var(--f-body); font-size:12px; color:var(--muted); margin-bottom:2px}
+.eq.warn{background:var(--warn-bg)}
+.callout{border-left:4px solid var(--accent-2); padding:6px 0 6px 12px; color:var(--ink); font-size:15px; margin:0}
+.cmp{width:100%; font-size:14px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-size:14px; font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap}
+th{font-weight:600; color:var(--muted); font-size:12.5px}
+th:first-child,td:first-child{text-align:center}
+td:first-child,th:first-child{text-align:left}
+#tbody tr{cursor:pointer}
+#tbody tr:hover{background:var(--sunk)}
+#tbody tr[aria-selected="true"]{background:var(--sunk); box-shadow:inset 4px 0 0 var(--accent)}
+td.d{font-weight:600}
+.assume{font-size:14px; color:var(--muted); display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:6px 24px}
+.assume p{margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">IQ-0432 · Curva característica</span>
+    <h1>Banco de pruebas de una bomba centrífuga</h1>
+    <p class="lead">Mueva la válvula de descarga, registre las lecturas y vea cómo cada punto medido construye las tres curvas contra el mismo caudal. La bomba del simulador es una centrífuga ficticia; las del módulo del laboratorio son periféricas y sus curvas son distintas.</p>
+  </header>
+
+  <div class="modebar">
+    <span class="k">Instrumentación</span>
+    <div class="seg" role="group" aria-label="Instrumentación del banco">
+      <button id="m-full" type="button" aria-pressed="true">Completa</button>
+      <button id="m-lab" type="button" aria-pressed="false">Como en nuestro laboratorio</button>
+    </div>
+    <p id="mode-desc">Manómetros en succión y descarga, caudalímetro y vatímetro: se mide la potencia eléctrica real.</p>
+  </div>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="t-banco">
+      <div class="panel-head"><h2 id="t-banco">Banco</h2><span class="tag">Lecturas en vivo</span></div>
+      <svg id="bench" viewBox="0 0 560 300" role="img" aria-label="Esquema del banco: tanque, tubería de succión, bomba con motor, tubería de descarga con manómetro, caudalímetro y válvula de regreso al tanque">
+        <rect x="20" y="70" width="110" height="170" rx="6" fill="var(--surface)" stroke="var(--steel)" stroke-width="3"/>
+        <rect x="23" y="110" width="104" height="127" fill="var(--water)"/>
+        <text x="75" y="258" text-anchor="middle" font-size="13" fill="var(--muted)">Tanque</text>
+        <path d="M127 220 H230" fill="none" stroke="var(--steel-2)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M290 180 V70 H520 V40 H75 V100" fill="none" stroke="var(--steel-2)" stroke-width="9" stroke-linejoin="round"/>
+        <path id="f-suc" d="M127 220 H230" fill="none" stroke="var(--water)" stroke-width="5" stroke-dasharray="7 11"/>
+        <path id="f-dis" d="M290 180 V70 H520 V40 H75 V100" fill="none" stroke="var(--water)" stroke-width="3.5" stroke-dasharray="7 11" stroke-linejoin="round"/>
+        <circle cx="262" cy="214" r="36" fill="var(--surface)" stroke="var(--steel)" stroke-width="3"/>
+        <path d="M262 178 h28 v14" fill="none" stroke="var(--steel)" stroke-width="3"/>
+        <g id="impeller"><path d="M262 214 l0 -24 M262 214 l21 12 M262 214 l-21 12" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/></g>
+        <circle cx="262" cy="214" r="5" fill="var(--accent)"/>
+        <rect x="300" y="196" width="78" height="36" rx="5" fill="var(--sunk)" stroke="var(--steel)" stroke-width="2"/>
+        <text x="339" y="219" text-anchor="middle" font-size="13" fill="var(--ink)">Motor</text>
+        <path d="M378 214 H392" stroke="var(--accent-2)" stroke-width="2"/>
+        <g id="meter-full">
+          <rect x="392" y="200" width="56" height="28" rx="5" fill="var(--surface)" stroke="var(--accent-2)" stroke-width="2"/>
+          <text x="420" y="219" text-anchor="middle" font-size="13" font-weight="600" fill="var(--accent-2)">kW</text>
+          <text x="420" y="248" text-anchor="middle" font-size="12" fill="var(--muted)">Vatímetro</text>
+        </g>
+        <g id="meter-lab" display="none">
+          <rect x="392" y="200" width="56" height="28" rx="5" fill="var(--surface)" stroke="var(--accent-2)" stroke-width="2"/>
+          <text x="420" y="219" text-anchor="middle" font-size="13" font-weight="600" fill="var(--accent-2)">A</text>
+          <rect x="458" y="200" width="56" height="28" rx="5" fill="var(--surface)" stroke="var(--accent-2)" stroke-width="2"/>
+          <text x="486" y="219" text-anchor="middle" font-size="13" font-weight="600" fill="var(--accent-2)">V</text>
+          <path d="M448 214 H458" stroke="var(--accent-2)" stroke-width="2"/>
+          <text x="453" y="248" text-anchor="middle" font-size="12" fill="var(--muted)">Amperímetro · 110 V</text>
+        </g>
+        <g id="g-ps" transform="translate(190 178)">
+          <path d="M0 26 V42" stroke="var(--steel)" stroke-width="3"/>
+          <circle r="22" fill="var(--surface)" stroke="var(--steel)" stroke-width="2.5"/>
+          <path class="needle" d="M0 0 L0 -16" stroke="var(--accent-2)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle r="3" fill="var(--ink)"/>
+          <text y="-30" text-anchor="middle" font-size="12" fill="var(--muted)">p<tspan baseline-shift="sub" font-size="9">s</tspan></text>
+        </g>
+        <g id="g-ps-none" display="none">
+          <text x="190" y="196" text-anchor="middle" font-size="12" fill="var(--muted)">sin manómetro</text>
+        </g>
+        <g id="g-pd" transform="translate(330 120)">
+          <path d="M-40 0 H-22" stroke="var(--steel)" stroke-width="3"/>
+          <circle r="22" fill="var(--surface)" stroke="var(--steel)" stroke-width="2.5"/>
+          <path class="needle" d="M0 0 L0 -16" stroke="var(--accent-2)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle r="3" fill="var(--ink)"/>
+          <text y="-30" text-anchor="middle" font-size="12" fill="var(--muted)">p<tspan baseline-shift="sub" font-size="9">d</tspan></text>
+        </g>
+        <rect x="380" y="56" width="44" height="28" rx="4" fill="var(--surface)" stroke="var(--steel)" stroke-width="2"/>
+        <text x="402" y="75" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">Q</text>
+        <text x="402" y="104" text-anchor="middle" font-size="12" fill="var(--muted)">Caudalímetro</text>
+        <g transform="translate(470 70)">
+          <path d="M-16 -13 L16 13 L16 -13 L-16 13 Z" fill="var(--surface)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>
+          <rect id="valve-fill" x="-3" y="-13" width="6" height="26" fill="var(--accent)"/>
+          <path d="M0 0 V-26 M-10 -26 H10" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>
+          <text y="34" text-anchor="middle" font-size="12" fill="var(--muted)">Válvula</text>
+        </g>
+        <text x="290" y="290" text-anchor="middle" font-size="12" fill="var(--muted)">Δz entre tomas de presión: 0,30 m · succión DN 50 · descarga DN 32</text>
+      </svg>
+
+      <div class="valve-row">
+        <label for="valve">Apertura de la válvula de descarga <output id="valve-out" for="valve">100 %</output></label>
+        <input id="valve" type="range" min="0" max="100" step="1" value="100">
+      </div>
+
+      <div class="instr" id="instr" aria-live="polite"></div>
+      <div class="missing" id="missing" hidden>
+        <p style="margin:0 0 8px">Sin manómetro de succión: p<sub>s</sub> se calcula con un balance de energía mecánica entre la superficie del tanque y la toma de succión. Sin medidor de factor de potencia: se usa P = V·I.</p>
+        <label class="check" for="kest" style="color:var(--ink)">Pérdidas estimadas en la succión, ΣK = <input id="kest" type="number" min="0" max="10" step="0.1" value="1.5" style="width:5em; font:inherit; padding:2px 6px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink)"></label>
+      </div>
+
+      <div class="btns">
+        <button id="b-reg" class="primary" type="button">Registrar punto</button>
+        <button id="b-sweep" type="button">Barrido automático</button>
+        <button id="b-clear" type="button">Borrar datos</button>
+      </div>
+      <label class="check"><input id="noise" type="checkbox" checked> Ruido de medición (lecturas que fluctúan como en el laboratorio)</label>
+      <p class="status" id="status" role="status"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="t-curvas">
+      <div class="tools">
+        <h2 id="t-curvas">Curvas contra el mismo caudal</h2>
+        <div class="seg" role="group" aria-label="Vista de las curvas">
+          <button id="v-sep" type="button" aria-pressed="true">Separadas</button>
+          <button id="v-one" type="button" aria-pressed="false">Una figura</button>
+        </div>
+      </div>
+      <div class="tools">
+        <div class="legend" id="legend"></div>
+        <label class="check"><input id="fit" type="checkbox" checked> Curvas ajustadas</label>
+      </div>
+      <div class="chart-box">
+        <svg id="chart" viewBox="0 0 640 566" role="img" aria-label="Curvas de cabeza, potencia y eficiencia contra caudal, construidas con los puntos registrados"></svg>
+        <div class="tip" id="tip" hidden></div>
+      </div>
+      <p class="status" id="chart-note"></p>
+    </section>
+  </div>
+
+  <div class="lower">
+    <section class="panel calc" aria-labelledby="t-calc">
+      <div class="panel-head"><h2 id="t-calc">Cálculo del punto</h2><span class="tag" id="calc-tag">—</span></div>
+      <div id="calc-body"><p class="status">Registre un punto o elija una fila de la tabla.</p></div>
+    </section>
+    <section class="panel" aria-labelledby="t-tabla">
+      <div class="panel-head"><h2 id="t-tabla">Puntos registrados</h2><span class="tag" id="n-pts">0 puntos</span></div>
+      <div class="tablewrap">
+        <table>
+          <thead id="thead"></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="t-sup">
+    <h2 id="t-sup">Datos del banco y supuestos</h2>
+    <div class="assume">
+      <p>Agua a 20 °C: ρ = 998 kg/m³, g = 9,81 m/s².</p>
+      <p>Succión DN 50 (A = 1,963 × 10⁻³ m²); descarga DN 32 (A = 8,04 × 10⁻⁴ m²).</p>
+      <p>Toma de descarga 0,30 m más alta que la de succión. Nivel del tanque 1,20 m sobre la toma de succión.</p>
+      <p>Pérdidas reales en la succión del banco: ΣK = 1,5 (entrada, accesorios y fricción, referidos a v<sub>s</sub>). Por eso p<sub>s</sub> baja al subir el caudal.</p>
+      <p>Motor de η<sub>motor</sub> = 0,80, tomada constante. Modo laboratorio: monofásico a 110 V, corriente de magnetización 6 A (FP ≈ 0,76 en cierre y ≈ 0,97 con la válvula abierta).</p>
+      <p>La bomba es ficticia, parecida a una KDN 32-125 a 2900 rpm. No son datos de catálogo.</p>
+      <p>Ruido (desviación estándar): 0,4 kPa en p<sub>s</sub>, 1,2 kPa en p<sub>d</sub>, 0,8 % en Q, 1 % en P<sub>e</sub> y en I, 0,6 V en V.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const RHO=998, G=9.81, AS=Math.PI*0.05*0.05/4, AD=Math.PI*0.032*0.032/4, DZ=0.30, HT=1.2, KS=1.5, ETAM=0.80, KP=0.005, KV0=0.0006, VN=110, IMAG=6;
+const RG=RHO*G;
+const pumpH=q=>23-0.004*q-0.0135*q*q;
+const bhpT=q=>0.62+0.047*q;
+function qOp(s){ if(s<=0) return 0; const K=KP+KV0/Math.pow(s,4), a=0.0135+K; return (-0.004+Math.sqrt(0.000016+80*a))/(2*a); }
+function sFor(q){ if(q<=0) return 0; const K=(20-0.004*q)/(q*q)-0.0135-KP; return K<=0?1:Math.min(1,Math.pow(KV0/K,0.25)); }
+function truth(q){ const vs=q/3600/AS, vd=q/3600/AD, H=pumpH(q);
+  const ps=(RG*HT-(1+KS)*RHO*vs*vs/2)/1000; const pd=ps+RG*(H-DZ-(vd*vd-vs*vs)/(2*G))/1000; const pe=bhpT(q)/ETAM;
+  const ia=pe*1000/VN; return {ps,pd,q,pe,V:VN,I:Math.sqrt(ia*ia+IMAG*IMAG)}; }
+const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+function measure(q,noisy){ const t=truth(q); if(!noisy) return t;
+  return {ps:t.ps+0.4*gauss(), pd:t.pd+1.2*gauss(), q:q>0?Math.max(0,q*(1+0.008*gauss())):0, pe:t.pe*(1+0.01*gauss()), V:t.V+0.6*gauss(), I:t.I*(1+0.01*gauss())}; }
+/* instrumentación completa */
+function deriveFull(m){ const vs=m.q/3600/AS, vd=m.q/3600/AD; const hp=(m.pd-m.ps)*1000/RG, hv=(vd*vd-vs*vs)/(2*G);
+  const H=hp+DZ+hv, bhp=ETAM*m.pe, pw=RG*(m.q/3600)*H/1000;
+  return {vs,vd,hp,hv,H,P:bhp,bhp,pw,eta:bhp>0?pw/bhp:0,etaMB:m.pe>0?pw/m.pe:0,fp:m.pe*1000/(m.V*m.I)}; }
+/* como en el laboratorio: sin pₛ medida, P = V·I */
+let KEST=1.5; const psBal=vs=>(RG*HT-(1+KEST)*RHO*vs*vs/2)/1000;
+function deriveLab(m){ const vs=m.q/3600/AS, vd=m.q/3600/AD; const ps=psBal(vs); const hp=(m.pd-ps)*1000/RG, hv=(vd*vd-vs*vs)/(2*G);
+  const H=hp+DZ+hv, pvi=m.V*m.I/1000, pw=RG*(m.q/3600)*H/1000; return {vs,vd,ps,hp,hv,H,P:pvi,pvi,pw,eta:pvi>0?pw/pvi:0}; }
+
+const $=id=>document.getElementById(id);
+const fmt=(x,d)=>x.toLocaleString('es-CR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let pts=[], sel=-1, view='sep', mode='full', reading=null, sweeping=false, timer=null;
+const D=p=>mode==='lab'?p.lab:p.full;
+
+/* ---------- modo ---------- */
+const TILES={
+  full:[['ps','Succión, p<sub>s</sub>','kPa man.',1],['pd','Descarga, p<sub>d</sub>','kPa man.',1],['q','Caudal, Q','m³/h',2],['pe','Eléctrica, P<sub>e</sub>','kW',3]],
+  lab:[['pd','Descarga, p<sub>d</sub>','kPa man.',1],['q','Caudal, Q','m³/h',2],['V','Tensión, V','V',1],['I','Corriente, I','A',2]]};
+function buildTiles(){ $('instr').innerHTML=TILES[mode].map(t=>'<div class="ins"><span class="k">'+t[1]+'</span><span class="v" id="r-'+t[0]+'">—</span><span class="u">'+t[2]+'</span></div>').join(''); }
+function buildHead(){ $('thead').innerHTML = mode==='full'
+  ? '<tr><th>#</th><th>Válvula (%)</th><th>Q (m³/h)</th><th>p<sub>s</sub> (kPa)</th><th>p<sub>d</sub> (kPa)</th><th>P<sub>e</sub> (kW)</th><th>H (m)</th><th>bhp (kW)</th><th>η (%)</th></tr>'
+  : '<tr><th>#</th><th>Válvula (%)</th><th>Q (m³/h)</th><th>p<sub>d</sub> (kPa)</th><th>V</th><th>I (A)</th><th>H (m)</th><th>V·I (kW)</th><th>η con V·I (%)</th></tr>'; }
+function buildLegend(){ $('legend').innerHTML = mode==='full'
+  ? '<span><i style="background:var(--s1)"></i>Cabeza total H</span><span><i style="background:var(--s2)"></i>Potencia al freno bhp</span><span><i style="background:var(--s3)"></i>Eficiencia η</span>'
+  : '<span><i style="background:var(--s1)"></i>H con pₛ calculada</span><span><i style="background:var(--s2)"></i>V·I</span><span><i style="background:var(--s3)"></i>η con V·I</span><span><i class="dash"></i>Con instrumentación completa</span>'; }
+function setMode(m){ mode=m; $('m-full').setAttribute('aria-pressed',m==='full'); $('m-lab').setAttribute('aria-pressed',m==='lab');
+  $('mode-desc').textContent = m==='full' ? 'Manómetros en succión y descarga, caudalímetro y vatímetro: se mide la potencia eléctrica real.'
+    : 'Manómetro solo en la descarga, caudalímetro, amperímetro y tensión de 110 V. La presión de succión sale de un balance de energía mecánica y la potencia se calcula como V·I, sin factor de potencia. Solo el método de medición es el del laboratorio: la bomba sigue siendo centrífuga, y las del módulo son periféricas.';
+  $('missing').hidden = m!=='lab';
+  ['meter-full','g-ps'].forEach(id=>$(id).setAttribute('display',m==='full'?'inline':'none'));
+  ['meter-lab','g-ps-none'].forEach(id=>$(id).setAttribute('display',m==='lab'?'inline':'none'));
+  buildTiles(); buildHead(); buildLegend(); refresh(); renderAll(); }
+
+/* ---------- banco ---------- */
+function setNeedle(id,val,lo,hi){ const f=Math.max(0,Math.min(1,(val-lo)/(hi-lo))); const a=-135+270*f;
+  document.querySelector('#'+id+' .needle').setAttribute('transform','rotate('+a.toFixed(1)+')'); }
+function opening(){ return +$('valve').value/100; }
+function refresh(){ const s=opening(); const q=qOp(s); reading=measure(q,$('noise').checked);
+  TILES[mode].forEach(t=>{ const e=$('r-'+t[0]); if(e) e.textContent=fmt(reading[t[0]],t[3]); });
+  setNeedle('g-ps',reading.ps,-40,40); setNeedle('g-pd',reading.pd,0,250);
+  $('valve-fill').setAttribute('height',(26*s).toFixed(1)); $('valve-fill').setAttribute('y',(-13*s).toFixed(1));
+  $('valve-out').textContent=Math.round(s*100)+' %'; }
+let off=0, ang=0, last=0;
+function flow(t){ const dt=Math.min(50,t-(last||t)); last=t; const q=reading?reading.q:0;
+  off-=dt*0.004*q; ang+=dt*0.9; $('f-suc').style.strokeDashoffset=off; $('f-dis').style.strokeDashoffset=off*2.4;
+  $('impeller').setAttribute('transform','rotate('+(ang%360).toFixed(1)+' 262 214)'); requestAnimationFrame(flow); }
+if(!reduce) requestAnimationFrame(flow);
+setInterval(()=>{ if($('noise').checked) refresh(); },600);
+
+/* ---------- registro ---------- */
+function mkPoint(s,m){ return {s,m,full:deriveFull(m),lab:deriveLab(m)}; }
+function register(){ const p=mkPoint(opening(),{...reading}); pts.push(p); sel=pts.length-1; renderAll();
+  $('status').textContent='Punto '+pts.length+' registrado: Q = '+fmt(p.m.q,2)+' m³/h, H = '+fmt(D(p).H,2)+' m.'; }
+function renderTable(){ const tb=$('tbody'); tb.innerHTML='';
+  pts.forEach((p,i)=>{ const tr=document.createElement('tr'); tr.setAttribute('aria-selected',i===sel?'true':'false'); tr.tabIndex=0; const d=D(p), m=p.m;
+    const mid = mode==='full' ? '<td>'+fmt(m.ps,1)+'</td><td>'+fmt(m.pd,1)+'</td><td>'+fmt(m.pe,3)+'</td>' : '<td>'+fmt(m.pd,1)+'</td><td>'+fmt(m.V,1)+'</td><td>'+fmt(m.I,2)+'</td>';
+    tr.innerHTML='<td>'+(i+1)+'</td><td>'+Math.round(p.s*100)+'</td><td>'+fmt(m.q,2)+'</td>'+mid+'<td class="d">'+fmt(d.H,2)+'</td><td class="d">'+fmt(d.P,3)+'</td><td class="d">'+fmt(d.eta*100,1)+'</td>';
+    const pick=()=>{sel=i; renderAll();}; tr.addEventListener('click',pick); tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}});
+    tb.appendChild(tr); });
+  $('n-pts').textContent=pts.length+(pts.length===1?' punto':' puntos'); }
+const eq=(lbl,body,cls)=>'<div class="eq'+(cls?' '+cls:'')+'"><span class="lbl">'+lbl+'</span>'+body+'</div>';
+function renderCalc(){ const box=$('calc-body');
+  if(sel<0||!pts[sel]){ box.innerHTML='<p class="status">Registre un punto o elija una fila de la tabla.</p>'; $('calc-tag').textContent='—'; return; }
+  const p=pts[sel], m=p.m; $('calc-tag').textContent='Punto '+(sel+1)+' · válvula '+Math.round(p.s*100)+' %';
+  const vel=eq('Velocidades en las tomas de presión','v<sub>s</sub> = Q/A<sub>s</sub> = '+fmt(m.q/3600,5)+' / 1,963×10⁻³ = <b>'+fmt(p.full.vs,2)+' m/s</b><br>v<sub>d</sub> = Q/A<sub>d</sub> = <b>'+fmt(p.full.vd,2)+' m/s</b>');
+  if(mode==='full'){ const d=p.full, hNoV=d.hp+DZ, dif=d.H>0?(d.hv/d.H*100):0;
+    box.innerHTML= vel+
+     eq('Cabeza total: presión + elevación + velocidad','H = (p<sub>d</sub> − p<sub>s</sub>)/ρg + Δz + (v<sub>d</sub>² − v<sub>s</sub>²)/2g<br>&nbsp;&nbsp;= '+fmt(d.hp,2)+' + '+fmt(DZ,2)+' + '+fmt(d.hv,2)+' = <b>'+fmt(d.H,2)+' m</b>')+
+     eq('Potencia al freno (en el eje)','bhp = η<sub>motor</sub> · P<sub>e</sub> = 0,80 × '+fmt(m.pe,3)+' = <b>'+fmt(d.bhp,3)+' kW</b>')+
+     eq('Potencia transferida al fluido','P<sub>w</sub> = ρ g Q H = 998 × 9,81 × '+fmt(m.q/3600,5)+' × '+fmt(d.H,2)+' = <b>'+fmt(d.pw,3)+' kW</b>')+
+     eq('Eficiencia de la bomba','η = P<sub>w</sub> / bhp = '+fmt(d.pw,3)+' / '+fmt(d.bhp,3)+' = <b>'+fmt(d.eta*100,1)+' %</b>')+
+     (m.q>0.5?'<p class="callout">Si se omite la cabeza de velocidad, H daría '+fmt(hNoV,2)+' m: '+fmt(dif,1)+' % menos. Pesa porque la descarga (DN 32) es más angosta que la succión (DN 50).</p>':'<p class="callout">Con la válvula cerrada no hay caudal: H es la cabeza de cierre y toda la potencia en el eje se disipa en la bomba (η = 0).</p>');
+  } else { const d=p.lab, f=p.full; const eH=f.H>0?(d.H-f.H)/f.H*100:0, eP=(d.pvi-m.pe)/m.pe*100;
+    box.innerHTML= vel+eq('Presión de succión por balance de energía mecánica (1: superficie del tanque, s: toma de succión)','p₁/ρg + z₁ + v₁²/2g = p<sub>s</sub>/ρg + z<sub>s</sub> + v<sub>s</sub>²/2g + ΣK v<sub>s</sub>²/2g, con p₁ = 0 man. y v₁ ≈ 0<br>p<sub>s</sub> = ρ g (z₁ − z<sub>s</sub>) − (1 + ΣK) ρ v<sub>s</sub>²/2 = 998 × 9,81 × 1,20 − (1 + '+fmt(KEST,1)+') × 998 × '+fmt(d.vs,2)+'²/2<br>&nbsp;&nbsp;= <b>'+fmt(d.ps,2)+' kPa</b> &nbsp;(con manómetro: '+fmt(m.ps,2)+' kPa)','warn')+
+     eq('Cabeza total con p<sub>s</sub> calculada','H = (p<sub>d</sub> − p<sub>s</sub>)/ρg + Δz + (v<sub>d</sub>² − v<sub>s</sub>²)/2g<br>&nbsp;&nbsp;= '+fmt(d.hp,2)+' + '+fmt(DZ,2)+' + '+fmt(d.hv,2)+' = <b>'+fmt(d.H,2)+' m</b>')+
+     eq('Potencia con P = V·I (en realidad son VA)','P = V · I = '+fmt(m.V,1)+' × '+fmt(m.I,2)+' = <b>'+fmt(d.pvi,3)+' kW</b>','warn')+
+     eq('Potencia transferida al fluido','P<sub>w</sub> = ρ g Q H = 998 × 9,81 × '+fmt(m.q/3600,5)+' × '+fmt(d.H,2)+' = <b>'+fmt(d.pw,3)+' kW</b>')+
+     eq('Eficiencia con V·I','η = P<sub>w</sub> / (V·I) = '+fmt(d.pw,3)+' / '+fmt(d.pvi,3)+' = <b>'+fmt(d.eta*100,1)+' %</b>')+
+     '<div class="tablewrap"><table class="cmp"><thead><tr><th>Mismo punto</th><th>Laboratorio</th><th>Instrumentación completa</th></tr></thead><tbody>'+
+     '<tr><td>H (m)</td><td>'+fmt(d.H,2)+'</td><td>'+fmt(f.H,2)+' ('+(eH>=0?'+':'')+fmt(eH,1)+' %)</td></tr>'+
+     '<tr><td>Potencia (kW)</td><td>V·I = '+fmt(d.pvi,3)+'</td><td>P<sub>e</sub> = '+fmt(m.pe,3)+' · FP = '+fmt(f.fp,2)+'</td></tr>'+
+     '<tr><td>Eficiencia (%)</td><td>'+fmt(d.eta*100,1)+'</td><td>motobomba '+fmt(f.etaMB*100,1)+' · bomba '+fmt(f.eta*100,1)+'</td></tr></tbody></table></div>'+
+     (m.q>0.5?'<p class="callout">V·I sobreestima la potencia en '+fmt(eP,1)+' % porque el FP es '+fmt(f.fp,2)+'. '+(Math.abs(eH)<0.5?'El balance de energía reproduce bien la p<sub>s</sub> del manómetro porque ΣK coincide con las pérdidas reales; cambie ΣK para ver cuánto pesa una mala estimación.':'Con ΣK = '+fmt(KEST,1)+' el balance '+(eH<0?'subestima':'sobreestima')+' H en '+fmt(Math.abs(eH),1)+' %: las pérdidas reales de la succión son ΣK = 1,5.')+' Por eso η con V·I queda por debajo de la de la motobomba, y muy por debajo de la de la bomba.</p>'
+      :'<p class="callout">En cierre el FP es el más bajo ('+fmt(f.fp,2)+'): la corriente de magnetización pesa más cuando el motor va poco cargado, y V·I exagera más la potencia.</p>');
+  } }
+
+/* ---------- ajuste ---------- */
+function polyfit2(xs,ys){ let S=[0,0,0,0,0],T=[0,0,0]; xs.forEach((x,i)=>{let p=1;for(let k=0;k<5;k++){S[k]+=p;p*=x;} p=1;for(let k=0;k<3;k++){T[k]+=ys[i]*p;p*=x;}});
+  const A=[[S[0],S[1],S[2],T[0]],[S[1],S[2],S[3],T[1]],[S[2],S[3],S[4],T[2]]];
+  for(let c=0;c<3;c++){ let piv=c; for(let r=c+1;r<3;r++) if(Math.abs(A[r][c])>Math.abs(A[piv][c])) piv=r; [A[c],A[piv]]=[A[piv],A[c]];
+    if(Math.abs(A[c][c])<1e-12) return null; for(let r=0;r<3;r++){ if(r===c) continue; const f=A[r][c]/A[c][c]; for(let k=c;k<4;k++) A[r][k]-=f*A[c][k]; } }
+  return [A[0][3]/A[0][0],A[1][3]/A[1][1],A[2][3]/A[2][2]]; }
+function fitOf(get){ const qs=[...new Set(pts.map(p=>Math.round(p.m.q*10)))]; if(qs.length<3) return null;
+  const x=pts.map(p=>p.m.q), cH=polyfit2(x,pts.map(p=>get(p).H)), cP=polyfit2(x,pts.map(p=>get(p).P)); if(!cH||!cP) return null;
+  const ev=(c,q)=>c[0]+c[1]*q+c[2]*q*q; const f={qmax:Math.max(...x), H:q=>ev(cH,q), P:q=>ev(cP,q)};
+  f.E=q=>{const b=f.P(q); return b>0? RG*(q/3600)*f.H(q)/1000/b : 0};
+  let best=0,bq=0; for(let q=0;q<=f.qmax;q+=0.05){const e=f.E(q); if(e>best){best=e;bq=q;}} f.bep=bq; f.etaMax=best; return f; }
+/* referencia en modo laboratorio: H real, potencia eléctrica real y η de la bomba */
+function refFit(){ const g=p=>({H:p.full.H,P:p.m.pe}); const f=fitOf(g); if(!f) return null; const fb=fitOf(p=>({H:p.full.H,P:p.full.bhp}));
+  f.E=fb.E; f.bep=fb.bep; f.etaMax=fb.etaMax; return f; }
+
+/* ---------- gráfico ---------- */
+const NS='http://www.w3.org/2000/svg', X0=58, QMAX=35; let X1=600, FK=1;
+const sx=q=>X0+(X1-X0)*q/QMAX;
+const svg=$('chart');
+function el(tag,attrs,parent,text){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,(k==='font-size')?(+attrs[k]*FK).toFixed(1):attrs[k]); if(text!=null) e.textContent=text; (parent||svg).appendChild(e); return e; }
+function panels(){ return mode==='full' ? [
+  {key:'H', title:'Cabeza total H (m)', lo:0, hi:25, ticks:[0,5,10,15,20,25], color:'var(--s1)', d:1},
+  {key:'P', title:'Potencia al freno bhp (kW)', lo:0, hi:2.5, ticks:[0,0.5,1,1.5,2,2.5], color:'var(--s2)', d:1},
+  {key:'E', title:'Eficiencia de la bomba η (%)', lo:0, hi:0.7, ticks:[0,0.2,0.4,0.6], color:'var(--s3)', pct:1}]
+ : [
+  {key:'H', title:'Cabeza total H (m), con pₛ por balance de energía', lo:0, hi:25, ticks:[0,5,10,15,20,25], color:'var(--s1)', d:1},
+  {key:'P', title:'Potencia V·I (kW) · punteada: eléctrica real', lo:0, hi:3, ticks:[0,1,2,3], color:'var(--s2)', d:1},
+  {key:'E', title:'η con V·I (%) · punteada: η de la bomba', lo:0, hi:0.7, ticks:[0,0.2,0.4,0.6], color:'var(--s3)', pct:1}]; }
+const tickTxt=(P,t)=>P.pct?fmt(t*100,0):fmt(t,P.d);
+function ypos(P,v,top,h){ return top+h-(Math.max(P.lo,Math.min(P.hi,v))-P.lo)/(P.hi-P.lo)*h; }
+function curvePath(fn,P,top,h,qmax){ let d=''; for(let q=0;q<=qmax+1e-9;q+=0.25){ const y=ypos(P,fn(q),top,h); d+=(d?'L':'M')+sx(q).toFixed(1)+' '+y.toFixed(1); } return d; }
+let layout={};
+function draw(){ svg.innerHTML=''; X1=view==='sep'?600:540; FK=(svg.clientWidth&&svg.clientWidth<520)?1.6:1;
+  const on=$('fit').checked, fit=on?fitOf(D):null, ref=(on&&mode==='lab')?refFit():null, PS=panels();
+  const drawSeries=(P,top,h,labelEnd)=>{
+    if(ref) el('path',{d:curvePath(ref[P.key],P,top,h,ref.qmax),fill:'none',stroke:P.color,'stroke-width':2,'stroke-dasharray':'6 5',opacity:0.6});
+    if(fit){ el('path',{d:curvePath(fit[P.key],P,top,h,fit.qmax),fill:'none',stroke:P.color,'stroke-width':2.5,'stroke-linecap':'round'});
+      if(labelEnd){ const qe=fit.qmax, y=ypos(P,fit[P.key](qe),top,h); el('text',{x:Math.min(sx(qe)+8,X1-4),y:y-8,'font-size':13,'font-weight':600,fill:'var(--ink)','text-anchor':sx(qe)+8>X1-30?'end':'start'},null,P.key==='H'?'H':P.key==='P'?(mode==='lab'?'V·I':'bhp'):'η'); } }
+    pts.forEach((p,j)=>{ const v=P.key==='E'?D(p).eta:D(p)[P.key]; el('circle',{cx:sx(p.m.q),cy:ypos(P,v,top,h),r:j===sel?7:5.5,fill:P.color,stroke:'var(--surface)','stroke-width':2}); }); };
+  if(view==='sep'){ svg.setAttribute('viewBox','0 0 640 566'); const h=140, gap=34; let top=24;
+    PS.forEach(P=>{ el('text',{x:X0,y:top-8,'font-size':14,'font-weight':600,fill:'var(--ink)'},null,P.title);
+      P.ticks.forEach(t=>{ const y=ypos(P,t,top,h); el('line',{x1:X0,x2:X1,y1:y,y2:y,stroke:'var(--line)','stroke-width':1});
+        el('text',{x:X0-8,y:y+4,'text-anchor':'end','font-size':12.5,fill:'var(--muted)'},null,tickTxt(P,t)); });
+      drawSeries(P,top,h,false); top+=h+gap; });
+    layout={top0:24, yb:top-gap};
+  } else { svg.setAttribute('viewBox','0 0 640 520'); const top=40, h=400;
+    PS[0].ticks.forEach(t=>{ const y=ypos(PS[0],t,top,h); el('line',{x1:X0,x2:X1,y1:y,y2:y,stroke:'var(--line)','stroke-width':1}); el('text',{x:X0-8,y:y+4,'text-anchor':'end','font-size':12.5,fill:'var(--muted)'},null,fmt(t,0)); });
+    PS[1].ticks.forEach(t=>{ const y=ypos(PS[1],t,top,h); el('text',{x:X1+6,y:y+4,'font-size':12.5,fill:'var(--muted)'},null,fmt(t,1)); });
+    PS[2].ticks.forEach(t=>{ const y=ypos(PS[2],t,top,h); el('text',{x:X1+40,y:y+4,'font-size':12.5,fill:'var(--muted)'},null,fmt(t*100,0)); });
+    el('text',{x:X0-8,y:top-14,'text-anchor':'end','font-size':13,'font-weight':600,fill:'var(--ink)'},null,'H (m)');
+    el('text',{x:X1+6,y:top-14,'font-size':13,'font-weight':600,fill:'var(--ink)'},null,'kW');
+    el('text',{x:X1+40,y:top-14,'font-size':13,'font-weight':600,fill:'var(--ink)'},null,'η %');
+    PS.forEach(P=>drawSeries(P,top,h,true)); layout={top0:top, yb:top+h}; }
+  for(let q=0;q<=QMAX;q+=5) el('text',{x:sx(q),y:layout.yb+20,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},null,String(q));
+  el('text',{x:(X0+X1)/2,y:layout.yb+42,'text-anchor':'middle','font-size':14,fill:'var(--ink)'},null,'Caudal Q (m³/h)');
+  if(fit && fit.etaMax>0.05){ const x=sx(fit.bep); el('line',{x1:x,x2:x,y1:layout.top0,y2:layout.yb,stroke:'var(--muted)','stroke-width':1.2,'stroke-dasharray':'5 5'});
+    el('text',{x:x+6,y:layout.top0+14,'font-size':13,fill:'var(--ink)'},null,(mode==='lab'?'Máx. con V·I ≈ ':'BEP ≈ ')+fmt(fit.bep,1)+' m³/h, η = '+fmt(fit.etaMax*100,0)+' %'); }
+  el('line',{x1:0,x2:0,y1:layout.top0,y2:layout.yb,stroke:'var(--ink)','stroke-width':1,opacity:0,id:'cross'});
+  el('rect',{x:X0,y:layout.top0-10,width:X1-X0,height:layout.yb-layout.top0+10,fill:'transparent',id:'hit'});
+  let note = pts.length===0 ? 'Aún no hay puntos: registre lecturas o haga un barrido.' : (fit? 'Ajuste cuadrático de H y de la potencia; η se calcula a partir de ambos ajustes.' : 'Con 3 caudales distintos aparece el ajuste.');
+  if(fit && ref && mode==='lab') note+=' El máximo con V·I cae en '+fmt(fit.bep,1)+' m³/h; el BEP real de la bomba está en '+fmt(ref.bep,1)+' m³/h, con η = '+fmt(ref.etaMax*100,0)+' %.';
+  $('chart-note').textContent=note; wireHover(fit); }
+function wireHover(fit){ const hit=$('hit'), tip=$('tip'), cross=$('cross'), box=svg.parentNode;
+  const lbl=mode==='lab'?'V·I':'bhp';
+  const move=e=>{ const r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal, k=r.width/vb.width; const xv=(e.clientX-r.left)/k;
+    let q=Math.max(0,Math.min(QMAX,(xv-X0)/(X1-X0)*QMAX)); let near=-1,dmin=1.2;
+    pts.forEach((p,i)=>{const dd=Math.abs(p.m.q-q); if(dd<dmin){dmin=dd;near=i;}});
+    let html; if(near>=0){ const p=pts[near], d=D(p); q=p.m.q; html='Punto '+(near+1)+' · Q '+fmt(q,2)+'<br>H '+fmt(d.H,2)+' m · '+lbl+' '+fmt(d.P,3)+' kW<br>η '+fmt(d.eta*100,1)+' %'; }
+    else if(fit && q<=fit.qmax){ html='Ajuste · Q '+fmt(q,1)+'<br>H '+fmt(fit.H(q),2)+' m · '+lbl+' '+fmt(fit.P(q),3)+' kW<br>η '+fmt(fit.E(q)*100,1)+' %'; }
+    else { tip.hidden=true; cross.setAttribute('opacity',0); return; }
+    const xs=sx(q); cross.setAttribute('x1',xs); cross.setAttribute('x2',xs); cross.setAttribute('opacity',0.35);
+    tip.innerHTML=html; tip.hidden=false; const bx=box.getBoundingClientRect();
+    let left=r.left-bx.left+xs*k; left=Math.max(110,Math.min(bx.width-110,left)); tip.style.left=left+'px'; tip.style.top=(r.top-bx.top+layout.top0*k+6)+'px'; };
+  hit.addEventListener('pointermove',move); hit.addEventListener('pointerdown',move);
+  hit.addEventListener('pointerleave',()=>{tip.hidden=true; cross.setAttribute('opacity',0);}); }
+function renderAll(){ renderTable(); renderCalc(); draw(); }
+
+/* ---------- controles ---------- */
+$('valve').addEventListener('input',refresh);
+$('noise').addEventListener('change',refresh);
+$('fit').addEventListener('change',draw);
+let rw=0; window.addEventListener('resize',()=>{ clearTimeout(rw); rw=setTimeout(draw,150); });
+$('kest').addEventListener('input',e=>{ const v=parseFloat(String(e.target.value).replace(',','.')); if(!isFinite(v)||v<0) return; KEST=v; pts.forEach(p=>{p.lab=deriveLab(p.m);}); renderAll(); });
+$('m-full').addEventListener('click',()=>setMode('full')); $('m-lab').addEventListener('click',()=>setMode('lab'));
+$('b-reg').addEventListener('click',register);
+$('b-clear').addEventListener('click',()=>{ pts=[]; sel=-1; renderAll(); $('status').textContent='Datos borrados. Cierre o abra la válvula y registre el primer punto.'; });
+function setView(v){ view=v; $('v-sep').setAttribute('aria-pressed',v==='sep'); $('v-one').setAttribute('aria-pressed',v==='one'); draw(); }
+$('v-sep').addEventListener('click',()=>setView('sep')); $('v-one').addEventListener('click',()=>setView('one'));
+const TARGETS=[32,28,24,20,16,12,8,4,0];
+const plan=()=>TARGETS.map(q=>Math.round(sFor(q)*100));
+function stopSweep(msg){ clearTimeout(timer); sweeping=false; $('b-sweep').textContent='Barrido automático'; $('b-reg').disabled=false; $('b-clear').disabled=false; $('valve').disabled=false; if(msg) $('status').textContent=msg; }
+$('b-sweep').addEventListener('click',()=>{
+  if(sweeping){ stopSweep('Barrido detenido.'); return; }
+  sweeping=true; pts=[]; sel=-1; renderAll(); $('b-sweep').textContent='Detener'; $('b-reg').disabled=true; $('b-clear').disabled=true; $('valve').disabled=true;
+  const seq=plan(); let i=0; const step=()=>{ if(i>=seq.length){ stopSweep('Barrido completo: '+seq.length+' puntos, de válvula abierta a cerrada.'); return; }
+    $('valve').value=seq[i]; refresh(); $('status').textContent='Válvula al '+seq[i]+' %: esperando lecturas estables…';
+    timer=setTimeout(()=>{ register(); i++; timer=setTimeout(step, reduce?150:650); }, reduce?150:700); };
+  step(); });
+
+/* ---------- estado inicial: barrido de ejemplo ---------- */
+buildTiles(); buildHead(); buildLegend();
+plan().forEach(s=>{ $('valve').value=s; refresh(); pts.push(mkPoint(s/100,{...reading})); });
+$('valve').value=100; sel=4; refresh(); renderAll();
+$('status').textContent='Barrido de ejemplo cargado (9 puntos). Use “Borrar datos” para construir la curva desde cero.';
+if(location.hash==='#laboratorio') setMode('lab');
+})();
+</script>
+</body>
+</html>

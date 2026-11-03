@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Mapa de eficiencia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap">
+<style>
+/* Layout: mapa de catálogo (H–Q por diámetro + isoeficiencia) junto a la lectura del cursor; debajo, tres paneles que comparten Q y las tres zonas de operación. */
+:root{
+  --bg:#f4f3ee; --surface:#fbfaf6; --sunk:#eceeea; --ink:#13293d; --muted:#4a5866; --line:#dfe2dd; --curve:#5d6b76;
+  --accent:#1f6b94; --accent-2:#a8501a; --on-accent:#f4f3ee; --band:rgba(31,107,148,.12);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --good:#0ca30c; --warn:#fab219;
+  --f-display:'Source Serif 4', Georgia, serif; --f-body:'IBM Plex Sans', Arial, sans-serif; --f-data:'IBM Plex Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --line:#2a3a45; --curve:#8d9ba5;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --band:rgba(111,179,221,.14);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --line:#2a3a45; --curve:#8d9ba5;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --band:rgba(111,179,221,.14);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:16px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); padding-block:28px 48px}
+.wrap{max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:24px}
+header{display:flex; flex-direction:column; gap:8px; max-width:72ch}
+.eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); font-weight:600}
+h1{font-family:var(--f-display); font-weight:700; font-size:clamp(28px,4vw,42px); line-height:1.1; margin:0; text-wrap:balance}
+h2{font-family:var(--f-display); font-weight:600; font-size:22px; margin:0; text-wrap:balance}
+h3{font-size:16px; margin:0}
+.lead{color:var(--muted); margin:0; font-size:17px}
+.grid{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:24px; align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:16px; min-width:0}
+.tools{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; justify-content:space-between}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; flex-wrap:wrap}
+.seg button{font:inherit; border:0; padding:7px 12px; background:transparent; color:var(--muted); cursor:pointer; font-variant-numeric:tabular-nums}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
+button{font:inherit; font-weight:500; border-radius:8px; padding:9px 14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer}
+button.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+button:focus-visible, input:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px}
+.check{display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--muted)}
+.check input{accent-color:var(--accent)}
+svg text{font-family:var(--f-body)}
+.chart{width:100%; height:auto; display:block; touch-action:none; cursor:crosshair}
+.row{display:flex; flex-direction:column; gap:8px}
+.row label{display:flex; justify-content:space-between; font-weight:500}
+.row output{font-family:var(--f-data); color:var(--accent)}
+input[type=range]{width:100%; accent-color:var(--accent)}
+.read{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+.ins{background:var(--sunk); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:2px; min-width:0}
+.ins .k{font-size:12px; color:var(--muted)}
+.ins .v{font-family:var(--f-data); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums}
+.zone{display:flex; gap:12px; align-items:flex-start; border-radius:10px; padding:12px 14px; background:var(--sunk); border-left:6px solid var(--warn)}
+.zone.ok{border-left-color:var(--good)}
+.zone .ico{flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:15px; color:#13293d; background:var(--warn)}
+.zone.ok .ico{background:var(--good); color:#fbfaf6}
+.zone p{margin:0}
+.zone .t{font-weight:600}
+.cards{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px}
+@media (max-width:860px){.cards{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; gap:8px; min-width:0}
+.card[aria-current="true"]{border-color:var(--accent); box-shadow:inset 0 4px 0 var(--accent)}
+.card .range{font-family:var(--f-data); font-size:14px; color:var(--accent-2)}
+.card ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px; color:var(--muted); font-size:15px}
+.note{font-size:14px; color:var(--muted); margin:0}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:13.5px; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{display:inline-block; width:18px; height:3px; border-radius:2px}
+.assume{font-size:14px; color:var(--muted); display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:6px 24px}
+.assume p{margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">IQ-0432 · Puntos de máxima eficiencia</span>
+    <h1>Mapa de eficiencia de una bomba centrífuga</h1>
+    <p class="lead">Arriba, cómo se lee en catálogo: una curva por diámetro de impulsor, las líneas de isoeficiencia y el BEP de cada curva. Abajo, qué pasa cuando la bomba opera lejos de su BEP.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="t-mapa">
+      <div class="tools">
+        <h2 id="t-mapa">Curvas H–Q por diámetro</h2>
+        <div class="seg" role="group" aria-label="Diámetro del impulsor" id="dsel"></div>
+      </div>
+      <div class="tools">
+        <div class="legend">
+          <span><i style="background:var(--curve)"></i>H–Q por diámetro</span>
+          <span><i style="background:repeating-linear-gradient(90deg,var(--s3) 0 6px,transparent 6px 10px)"></i>Isoeficiencia</span>
+          <span><i style="background:var(--s2)"></i>Línea de mejor eficiencia</span>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap">
+          <label class="check"><input id="o-iso" type="checkbox" checked> Isoeficiencia</label>
+          <label class="check"><input id="o-bep" type="checkbox" checked> BEP y línea</label>
+          <label class="check"><input id="o-por" type="checkbox" checked> Región preferente</label>
+        </div>
+      </div>
+      <svg id="map" class="chart" viewBox="0 0 680 470" role="img" aria-label="Curvas de cabeza contra caudal para cuatro diámetros de impulsor, con líneas de isoeficiencia, el punto de máxima eficiencia de cada curva y la línea que los une"></svg>
+    </section>
+
+    <section class="panel" aria-labelledby="t-cur">
+      <h2 id="t-cur">Punto de operación</h2>
+      <div class="row">
+        <label for="qcur"><span>Caudal sobre la curva de Ø<span id="dlab">125</span> mm</span> <output id="qout" for="qcur">16,0 m³/h</output></label>
+        <input id="qcur" type="range" min="0.5" max="37" step="0.1" value="16">
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button id="play" class="primary" type="button">Recorrer la curva</button>
+        <button id="tobep" type="button">Ir al BEP</button>
+      </div>
+      <div class="read" aria-live="polite">
+        <div class="ins"><span class="k">Cabeza H</span><span class="v" id="r-h">—</span></div>
+        <div class="ins"><span class="k">Eficiencia η</span><span class="v" id="r-e">—</span></div>
+        <div class="ins"><span class="k">Q / Q<sub>BEP</sub></span><span class="v" id="r-r">—</span></div>
+        <div class="ins"><span class="k">NPSH requerido</span><span class="v" id="r-n">—</span></div>
+        <div class="ins"><span class="k">Empuje radial, K<sub>r</sub></span><span class="v" id="r-k">—</span></div>
+        <div class="ins"><span class="k">BEP de este diámetro</span><span class="v" id="r-b">—</span></div>
+      </div>
+      <div class="zone" id="zone"><span class="ico" id="zico">!</span><div><p class="t" id="zt">—</p><p class="note" id="zd"></p></div></div>
+      <p class="note">Arrastre sobre cualquier gráfico para mover el punto.</p>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="t-lejos">
+    <div class="tools"><h2 id="t-lejos">Lejos del BEP: lo que cambia con el caudal</h2><span class="note" id="pnote">Ø125 mm · franja: región preferente</span></div>
+    <svg id="mini" class="chart" viewBox="0 0 1200 300" role="img" aria-label="Tres paneles contra el mismo caudal: eficiencia, NPSH requerido y coeficiente de empuje radial, con la región preferente sombreada"></svg>
+  </section>
+
+  <div class="cards" id="cards">
+    <article class="card" data-z="L">
+      <span class="range">Q &lt; 70 % de Q<sub>BEP</sub></span>
+      <h3>A la izquierda del BEP</h3>
+      <ul>
+        <li>El flujo entra a los álabes con mal ángulo: aparece recirculación en la succión y en la descarga.</li>
+        <li>El empuje radial sube y con él la vibración y la carga sobre sellos y rodamientos.</li>
+        <li>Cerca del cierre, casi toda la potencia se queda en el líquido y lo calienta. El fabricante fija un caudal mínimo continuo.</li>
+      </ul>
+    </article>
+    <article class="card" data-z="P">
+      <span class="range">70 % a 120 % de Q<sub>BEP</sub></span>
+      <h3>Región de operación preferente</h3>
+      <ul>
+        <li>El flujo sigue bien a los álabes y la eficiencia queda cerca del máximo.</li>
+        <li>Empuje radial mínimo en el BEP: menos vibración y más vida de sellos y rodamientos.</li>
+        <li>Es la franja que se busca al seleccionar la bomba.</li>
+      </ul>
+    </article>
+    <article class="card" data-z="R">
+      <span class="range">Q &gt; 120 % de Q<sub>BEP</sub></span>
+      <h3>A la derecha del BEP</h3>
+      <ul>
+        <li>Más velocidad en el ojo del impulsor: el NPSH requerido crece rápido y aumenta el riesgo de cavitación.</li>
+        <li>El empuje radial vuelve a subir.</li>
+        <li>La potencia al freno sigue subiendo: al final de la curva se puede sobrecargar el motor.</li>
+      </ul>
+    </article>
+  </div>
+
+  <section class="panel" aria-labelledby="t-sup">
+    <h2 id="t-sup">Cómo está hecho este mapa</h2>
+    <div class="assume">
+      <p>Bomba ficticia, parecida a una KDN 32-125 a 2900 rpm, con impulsores de Ø115 a Ø142 mm. No son datos de catálogo.</p>
+      <p>Los diámetros recortados siguen las leyes de afinidad: Q ∝ D y H ∝ D². Al recortar se pierde algo de eficiencia (unos 4 puntos de Ø142 a Ø115).</p>
+      <p>Región de operación preferente de 70 % a 120 % de Q<sub>BEP</sub>, como referencia general de ANSI/HI 9.6.3. Cada fabricante publica los límites de su bomba.</p>
+      <p>Empuje radial con la correlación de Stepanoff para voluta simple: K<sub>r</sub> = 0,36 [1 − (Q/Q<sub>BEP</sub>)²], en valor absoluto.</p>
+      <p>NPSH requerido ilustrativo, con la tendencia de los puntos digitalizados del catálogo DAB: sube con Q y es mayor en los impulsores pequeños.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const RG=998*9.81, DS=[115,125,135,142];
+const Hb=q=>23-0.004*q-0.0135*q*q;
+const Eb=q=>q<=0?0:RG*(q/3600)*Hb(q)/1000/(0.62+0.047*q);
+const trim=D=>1+0.3*(D-125)/142;
+const r=D=>D/125;
+const HD=(D,Q)=>r(D)*r(D)*Hb(Q/r(D));
+const ED=(D,Q)=>Eb(Q/r(D))*trim(D);
+let QB=0; {let best=0; for(let q=0;q<=33;q+=0.01){const e=Eb(q); if(e>best){best=e;QB=q;}}}
+const EBmax=Eb(QB);
+const qbep=D=>QB*r(D), qend=D=>33*r(D);
+const npsh=(D,Q)=>(0.7+0.0012*Q*Q)*(1+1.2*(142-D)/142);
+const kr=(D,Q)=>0.36*Math.abs(1-Math.pow(Q/qbep(D),2));
+const zoneOf=x=>x<0.7?'L':(x<=1.2?'P':'R');
+
+const $=id=>document.getElementById(id);
+const fmt=(x,d)=>x.toLocaleString('es-CR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS='http://www.w3.org/2000/svg';
+let D=125, Q=16, playing=false, raf=0, FK=1;
+function el(svg,tag,a,text){ const e=document.createElementNS(NS,tag); for(const k in a) e.setAttribute(k,k==='font-size'?(+a[k]*FK).toFixed(1):a[k]); if(text!=null) e.textContent=text; svg.appendChild(e); return e; }
+
+/* ---------- mapa ---------- */
+const M={x0:58,x1:600,y0:20,y1:420,qmax:40,hmax:32};
+const mx=q=>M.x0+(M.x1-M.x0)*q/M.qmax, my=h=>M.y1-(M.y1-M.y0)*h/M.hmax;
+function bisect(f,a,b){ let fa=f(a); for(let i=0;i<50;i++){ const m=(a+b)/2, fm=f(m); if((fm>0)===(fa>0)){a=m;fa=fm;} else b=m; } return (a+b)/2; }
+const LEVELS=[0.45,0.50,0.55,0.58,0.60,0.62];
+function isoLine(L){ const left=[],right=[]; let d0=null; for(let d=115; d<=142.001; d+=0.5){ const f=x=>Eb(x)*trim(d)-L; if(EBmax*trim(d)<L) continue;
+    if(d0===null) d0=d; const xl=bisect(f,0.01,QB), xr=bisect(f,QB,33*1.0); const R=r(d);
+    left.push([xl*R, R*R*Hb(xl)]); if(xr<33) right.push([xr*R,R*R*Hb(xr)]); }
+  /* si la línea llega al impulsor más pequeño, sus dos ramas terminan sobre esa curva y no se unen */
+  return {left,right,open:d0!==null&&d0<=115.01}; }
+const ISO=LEVELS.map(L=>({L,...isoLine(L)}));
+function drawMap(){ const s=$('map'); s.innerHTML=''; FK=(s.clientWidth&&s.clientWidth<560)?1.5:1;
+  for(let h=0;h<=30;h+=5){ const y=my(h); el(s,'line',{x1:M.x0,x2:M.x1,y1:y,y2:y,stroke:'var(--line)'}); el(s,'text',{x:M.x0-8,y:y+4,'text-anchor':'end','font-size':12.5,fill:'var(--muted)'},String(h)); }
+  for(let q=0;q<=40;q+=5){ el(s,'text',{x:mx(q),y:M.y1+20,'text-anchor':'middle','font-size':12.5,fill:'var(--muted)'},String(q)); }
+  el(s,'text',{x:(M.x0+M.x1)/2,y:M.y1+42,'text-anchor':'middle','font-size':14,fill:'var(--ink)'},'Caudal Q (m³/h)');
+  el(s,'text',{x:M.x0,y:M.y0-4,'font-size':13,'font-weight':600,fill:'var(--ink)'},'H (m)');
+  if($('o-por').checked){ const a=0.7*qbep(D), b=Math.min(1.2*qbep(D),qend(D)); let d='';
+    for(let q=a;q<=b+1e-9;q+=0.2) d+=(d?'L':'M')+mx(q).toFixed(1)+' '+my(HD(D,q)).toFixed(1);
+    el(s,'path',{d,fill:'none',stroke:'var(--band)','stroke-width':16,'stroke-linecap':'round'}); }
+  if($('o-iso').checked){ ISO.forEach(o=>{ const lines=o.open?[o.left,o.right]:[o.left.slice().reverse().concat(o.right)];
+      lines.forEach(pts=>{ if(pts.length<2) return; el(s,'path',{d:pts.map((p,i)=>(i?'L':'M')+mx(p[0]).toFixed(1)+' '+my(p[1]).toFixed(1)).join(''),fill:'none',stroke:'var(--s3)','stroke-width':1.6,'stroke-dasharray':'6 4'}); });
+      const t=o.right.length?o.right[o.right.length-1]:o.left[o.left.length-1];
+      el(s,'text',{x:mx(t[0])+4,y:my(t[1])-6,'font-size':12,'font-weight':600,fill:'var(--ink)'},fmt(o.L*100,0)+' %'); }); }
+  DS.forEach(d=>{ let p=''; for(let q=0;q<=qend(d)+1e-9;q+=0.25) p+=(p?'L':'M')+mx(q).toFixed(1)+' '+my(HD(d,q)).toFixed(1);
+    const on=d===D; el(s,'path',{d:p,fill:'none',stroke:on?'var(--s1)':'var(--curve)','stroke-width':on?3:1.8});
+    el(s,'text',{x:mx(qend(d))+6,y:my(HD(d,qend(d)))+4,'font-size':13,'font-weight':on?700:500,fill:'var(--ink)'},'Ø'+d); });
+  if($('o-bep').checked){ let p=''; for(let d=112;d<=146;d+=1){ const q=qbep(d); p+=(p?'L':'M')+mx(q).toFixed(1)+' '+my(HD(d,q)).toFixed(1); }
+    el(s,'path',{d:p,fill:'none',stroke:'var(--s2)','stroke-width':2});
+    DS.forEach(d=>{ const x=mx(qbep(d)), y=my(HD(d,qbep(d))); el(s,'path',{d:'M'+x+' '+(y-7)+'L'+(x+7)+' '+y+'L'+x+' '+(y+7)+'L'+(x-7)+' '+y+'Z',fill:'var(--s2)',stroke:'var(--surface)','stroke-width':2}); });
+    const d=146, q=qbep(d); el(s,'text',{x:mx(q)+8,y:my(HD(d,q))-4,'font-size':12.5,'font-weight':600,fill:'var(--ink)'},'BEP'); }
+  const x=mx(Q), y=my(HD(D,Q)); el(s,'line',{x1:x,x2:x,y1:y,y2:M.y1,stroke:'var(--ink)','stroke-width':1,'stroke-dasharray':'3 4',opacity:.6});
+  el(s,'circle',{cx:x,cy:y,r:8,fill:'var(--s1)',stroke:'var(--surface)','stroke-width':3});
+  hit(s,M.x0,M.x1,M.qmax); }
+
+/* ---------- paneles inferiores ---------- */
+const P={x0:50,x1:1180,qmax:40};
+const PAN=[{t:'Eficiencia η (%)',hi:0.7,tk:[0,0.2,0.4,0.6],f:ED,c:'var(--s3)',v:x=>fmt(x*100,0)},{t:'NPSH requerido (m)',hi:4,tk:[0,1,2,3,4],f:npsh,c:'var(--s2)',v:x=>fmt(x,0)},{t:'Empuje radial, coeficiente K_r',hi:1,tk:[0,0.5,1],f:kr,c:'var(--s1)',v:x=>fmt(x,1)}];
+function drawMini(){ const s=$('mini'); s.innerHTML=''; const narrow=s.clientWidth&&s.clientWidth<700;
+  FK=narrow?1.6:1; const W=narrow?600:1200, gw=narrow?W:(W-60)/3, ph=narrow?150:200, rows=narrow?3:1;
+  s.setAttribute('viewBox','0 0 '+W+' '+(narrow?3*ph+3*95:290));
+  PAN.forEach((pp,i)=>{ const ox=narrow?0:i*(gw+30), oy=narrow?i*(ph+95):0, x0=ox+46, x1=ox+gw-12, top=oy+30, bot=top+ph;
+    const sx=q=>x0+(x1-x0)*q/40, sy=v=>bot-(bot-top)*Math.max(0,Math.min(1,v/pp.hi));
+    el(s,'text',{x:x0,y:top-12,'font-size':14,'font-weight':600,fill:'var(--ink)'},pp.t);
+    const a=sx(0.7*qbep(D)), b=sx(Math.min(1.2*qbep(D),qend(D))); el(s,'rect',{x:a,y:top,width:b-a,height:bot-top,fill:'var(--band)'});
+    pp.tk.forEach(t=>{ const y=sy(t); el(s,'line',{x1:x0,x2:x1,y1:y,y2:y,stroke:'var(--line)'}); el(s,'text',{x:x0-6,y:y+4,'text-anchor':'end','font-size':12,fill:'var(--muted)'},pp.v(t)); });
+    for(let q=0;q<=40;q+=10) el(s,'text',{x:sx(q),y:bot+18,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},String(q));
+    el(s,'text',{x:(x0+x1)/2,y:bot+38,'text-anchor':'middle','font-size':12.5,fill:'var(--ink)'},'Q (m³/h)');
+    let d=''; for(let q=0.3;q<=qend(D)+1e-9;q+=0.25) d+=(d?'L':'M')+sx(q).toFixed(1)+' '+sy(pp.f(D,q)).toFixed(1);
+    el(s,'path',{d,fill:'none',stroke:pp.c,'stroke-width':2.5});
+    const xb=sx(qbep(D)); el(s,'line',{x1:xb,x2:xb,y1:top,y2:bot,stroke:'var(--muted)','stroke-dasharray':'4 4'});
+    const xq=sx(Q), yq=sy(pp.f(D,Q)); el(s,'line',{x1:xq,x2:xq,y1:top,y2:bot,stroke:'var(--ink)',opacity:.5});
+    el(s,'circle',{cx:xq,cy:yq,r:6.5,fill:pp.c,stroke:'var(--surface)','stroke-width':2.5});
+    el(s,'rect',{x:x0,y:top,width:x1-x0,height:bot-top,fill:'transparent','data-x0':x0,'data-x1':x1,class:'hitp'}); });
+  s.querySelectorAll('.hitp').forEach(h=>{ const x0=+h.dataset.x0, x1=+h.dataset.x1; bindDrag(h,s,x0,x1,40); }); }
+
+/* ---------- interacción ---------- */
+function bindDrag(target,svg,x0,x1,qm){ const go=e=>{ if(e.type==='pointermove'&&!(e.buttons&1)&&e.pointerType==='mouse') return;
+    const rc=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal, k=rc.width/vb.width; const xv=(e.clientX-rc.left)/k;
+    setQ((xv-x0)/(x1-x0)*qm); };
+  target.addEventListener('pointerdown',e=>{ stop(); go(e); }); target.addEventListener('pointermove',go); }
+function hit(s,x0,x1,qm){ const h=el(s,'rect',{x:x0,y:M.y0,width:x1-x0,height:M.y1-M.y0,fill:'transparent'}); bindDrag(h,s,x0,x1,qm); }
+function setQ(q){ Q=Math.max(0.5,Math.min(qend(D),q)); $('qcur').value=Q; update(); }
+function update(){ const qb=qbep(D), x=Q/qb, z=zoneOf(x);
+  $('qout').textContent=fmt(Q,1)+' m³/h'; $('dlab').textContent=D; $('qcur').max=qend(D).toFixed(1);
+  $('r-h').textContent=fmt(HD(D,Q),1)+' m'; $('r-e').textContent=fmt(ED(D,Q)*100,1)+' %'; $('r-r').textContent=fmt(x*100,0)+' %';
+  $('r-n').textContent=fmt(npsh(D,Q),2)+' m'; $('r-k').textContent=fmt(kr(D,Q),2); $('r-b').textContent=fmt(qb,1)+' m³/h · '+fmt(ED(D,qb)*100,0)+' %';
+  const zone=$('zone'); zone.classList.toggle('ok',z==='P'); $('zico').textContent=z==='P'?'✓':'!';
+  $('zt').textContent= z==='P'?'Dentro de la región preferente': z==='L'?'Fuera de la región preferente, a la izquierda del BEP':'Fuera de la región preferente, a la derecha del BEP';
+  $('zd').textContent= z==='P'?'Eficiencia cerca del máximo y empuje radial bajo.': z==='L'?'Recirculación y empuje radial alto; cerca del cierre, el líquido se calienta.':'NPSH requerido alto: revise que el disponible alcance. Más potencia al freno.';
+  document.querySelectorAll('#cards .card').forEach(c=>c.setAttribute('aria-current',c.dataset.z===z?'true':'false'));
+  $('pnote').textContent='Ø'+D+' mm · franja: región preferente ('+fmt(0.7*qb,1)+' a '+fmt(Math.min(1.2*qb,qend(D)),1)+' m³/h)';
+  drawMap(); drawMini(); }
+function buildSeg(){ const g=$('dsel'); g.innerHTML=''; DS.forEach(d=>{ const b=document.createElement('button'); b.type='button'; b.textContent='Ø'+d; b.setAttribute('aria-pressed',d===D);
+  b.addEventListener('click',()=>{ const x=Q/qbep(D); D=d; g.querySelectorAll('button').forEach(o=>o.setAttribute('aria-pressed',o===b)); setQ(x*qbep(D)); }); g.appendChild(b); }); }
+function stop(){ playing=false; cancelAnimationFrame(raf); $('play').textContent='Recorrer la curva'; }
+$('play').addEventListener('click',()=>{ if(playing){stop();return;} playing=true; $('play').textContent='Detener';
+  const q0=1, q1=qend(D), dur=reduce?1:9000; let t0=null;
+  const step=t=>{ if(!playing) return; if(t0===null) t0=t; const f=Math.min(1,(t-t0)/dur); setQ(q0+(q1-q0)*f); if(f<1) raf=requestAnimationFrame(step); else stop(); };
+  raf=requestAnimationFrame(step); });
+$('tobep').addEventListener('click',()=>{ stop(); setQ(qbep(D)); });
+$('qcur').addEventListener('input',e=>{ stop(); setQ(+e.target.value); });
+['o-iso','o-bep','o-por'].forEach(id=>$(id).addEventListener('change',drawMap));
+let rw=0; addEventListener('resize',()=>{ clearTimeout(rw); rw=setTimeout(update,150); });
+buildSeg(); update();
+})();
+</script>
+</body>
+</html>

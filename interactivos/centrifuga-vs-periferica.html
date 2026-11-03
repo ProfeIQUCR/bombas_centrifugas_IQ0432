@@ -1,0 +1,533 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Centrífuga vs. periférica</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: barra de control fija arriba; dos bombas lado a lado (vista frontal, corte, medidores, explicación); al final el gráfico de corriente */
+:root{
+  --bg:#ECEFEA; --panel:#FAFBF8; --ink:#1C2329; --muted:#5A6570; --line:#D2D8D1; --grid:#E3E7E1;
+  --pump:#B5361F; --water:#1F6C97; --metal:#6F7E8A; --casing:#C9D0CB; --heat:#E0761A; --ok:#2C7A4C;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13191E; --panel:#1B232A; --ink:#E5E9EB; --muted:#9BA7B0; --line:#2E3A43; --grid:#25303A;
+    --pump:#EA6C53; --water:#5CB1DC; --metal:#8C9AA6; --casing:#34424C; --heat:#F39A45; --ok:#5DC48B; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13191E; --panel:#1B232A; --ink:#E5E9EB; --muted:#9BA7B0; --line:#2E3A43; --grid:#25303A;
+  --pump:#EA6C53; --water:#5CB1DC; --metal:#8C9AA6; --casing:#34424C; --heat:#F39A45; --ok:#5DC48B; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 36px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.eyebrow{font:500 11.5px/1.3 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 clamp(30px,4.4vw,42px)/1.02 var(--display);letter-spacing:.01em;margin:6px 0 8px;text-wrap:balance}
+.lede{max-width:70ch;color:var(--muted);margin:0}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+  padding:12px 14px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.steps{display:flex;flex-wrap:wrap;border:1px solid var(--ink);border-radius:5px;overflow:hidden}
+.steps button{font:600 15px/1 var(--display);letter-spacing:.03em;padding:9px 11px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.steps button+button{border-left:1px solid var(--ink)}
+.steps button[aria-selected="true"]{background:var(--ink);color:var(--panel)}
+.valve{display:flex;align-items:center;gap:10px;flex:1 1 260px;min-width:0}
+.valve label{font-weight:500;font-size:14px;white-space:nowrap}
+.valve input{flex:1;min-width:80px;accent-color:var(--pump)}
+.valve output{font:500 14px var(--mono);font-variant-numeric:tabular-nums;min-width:4.2ch;text-align:right}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:600 14px/1 var(--body);padding:9px 12px;border-radius:5px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+.pumps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:860px){.pumps{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.card h2{font:700 24px/1 var(--display);letter-spacing:.02em;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card h2 small{font:500 12px var(--mono);color:var(--muted);letter-spacing:0}
+canvas{width:100%;height:auto;display:block;max-width:100%}
+.inset-l{font:600 12.5px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 -6px}
+.meters{display:grid;grid-template-columns:auto auto minmax(60px,1fr);gap:5px 12px;align-items:center;font-size:14px}
+.meters .v{font:500 13.5px var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.meters .v small{color:var(--muted);font-size:11.5px}
+.track{height:8px;background:var(--grid);border-radius:4px;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--metal);border-radius:4px}
+.track.cur i{background:var(--pump)}
+.delta{font:500 12.5px var(--mono);font-variant-numeric:tabular-nums}
+.text h3{font:600 15px var(--display);letter-spacing:.06em;text-transform:uppercase;margin:0 0 4px;color:var(--muted)}
+.text p{margin:0;max-width:65ch}
+.wide{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:860px){.wide{grid-template-columns:minmax(0,1fr)}}
+.chart{width:100%;height:auto;display:block}
+.chart .grid{stroke:var(--grid)} .chart .axis{stroke:var(--muted)}
+.chart .tick{fill:var(--muted);font:11px var(--mono)} .chart .axl{fill:var(--muted);font:12.5px var(--body)}
+.l-c{stroke:var(--metal);stroke-width:2.6;fill:none} .l-p{stroke:var(--pump);stroke-width:2.6;fill:none}
+.l-cb{stroke:var(--metal);stroke-width:1.6;stroke-dasharray:5 4;fill:none} .l-pb{stroke:var(--pump);stroke-width:1.6;stroke-dasharray:5 4;fill:none}
+.d-c{fill:var(--metal);stroke:var(--panel);stroke-width:2} .d-p{fill:var(--pump);stroke:var(--panel);stroke-width:2}
+.ref{stroke:var(--muted);stroke-dasharray:2 3}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin-top:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:20px;border-top:2.6px solid}
+.sw.c{border-color:var(--metal)} .sw.p{border-color:var(--pump)}
+.sw.cb{border-top:1.6px dashed var(--metal)} .sw.pb{border-top:1.6px dashed var(--pump)}
+.eq{font:500 14px var(--mono);background:var(--bg);border-radius:4px;padding:6px 10px;display:inline-block}
+.common p{margin:0 0 10px;max-width:65ch}
+.common p:last-child{margin-bottom:0}
+.field{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;flex:1 1 100%;border-top:1px solid var(--line);padding-top:10px}
+.fseg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.fseg button{font:600 13px/1 var(--body);padding:7px 11px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.fseg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.cbar{display:flex;align-items:center;gap:8px;font:500 12px var(--mono);color:var(--muted);flex:1 1 260px;min-width:0;flex-wrap:wrap}
+.cbar b{font:600 13px var(--body);color:var(--ink)}
+.cbar .scale{display:flex;align-items:center;gap:8px;flex:1 1 180px;min-width:0}
+.cbar i{flex:1;height:12px;border-radius:2px;min-width:60px}
+.cap{margin:-4px 0 0;font-size:13.5px;color:var(--muted);max-width:65ch}
+.cap .tr{display:inline-block;width:20px;height:0;border-top:2.5px solid #111;box-shadow:0 0 0 1.5px #fff;vertical-align:middle;margin-right:8px}
+.chart.second{margin-top:20px}
+.foot{color:var(--muted);font-size:12.5px;max-width:90ch;margin:0}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">IQ-0432 · Bombas · Dos formas de entregar energía</div>
+    <h1>Centrífuga vs. periférica</h1>
+    <p class="lede">Las dos bombas giran con un motor igual y a la misma velocidad. Recorra los cuatro pasos y cierre la válvula para ver por qué, al estrangular la descarga, la corriente del motor baja en una y sube en la otra.</p>
+  </header>
+
+  <div class="bar">
+    <div class="steps" role="tablist" aria-label="Pasos">
+      <button type="button" role="tab" id="s1" aria-selected="true">1 · Construcción</button>
+      <button type="button" role="tab" id="s2" aria-selected="false">2 · Energía</button>
+      <button type="button" role="tab" id="s3" aria-selected="false">3 · Estrangular</button>
+      <button type="button" role="tab" id="s4" aria-selected="false">4 · Amperímetro</button>
+    </div>
+    <div class="valve">
+      <label for="in-o">Válvula de descarga</label>
+      <input type="range" id="in-o" min="0" max="100" step="1" value="100">
+      <output id="out-o" for="in-o">100 %</output>
+    </div>
+    <div class="btns">
+      <button type="button" class="btn primary" id="b-close">Cerrar válvula</button>
+      <button type="button" class="btn" id="b-open">Abrir</button>
+      <button type="button" class="btn" id="b-pause" aria-pressed="false">Pausar</button>
+    </div>
+    <div class="field" id="field" hidden>
+      <span class="fseg" role="group" aria-label="Mapa de color">
+        <button type="button" id="f-p" aria-pressed="true">Presión</button>
+        <button type="button" id="f-v" aria-pressed="false">Velocidad</button>
+        <button type="button" id="f-n" aria-pressed="false">Sin mapa</button>
+      </span>
+      <span class="cbar" id="cbar"><b id="cb-name">Presión manométrica (kPa)</b><span class="scale"><span id="cb-min">0</span><i id="cb-grad"></i><span id="cb-max">350</span></span></span>
+    </div>
+  </div>
+
+  <div class="pumps">
+    <section class="card" aria-labelledby="h-c">
+      <h2 id="h-c">Centrífuga <small>impulsor radial · voluta</small></h2>
+      <canvas id="cv-c" width="440" height="420" role="img" aria-label="Vista frontal de una bomba centrífuga con el impulsor girando"></canvas>
+      <p class="cap" id="c-cap" hidden><i class="tr"></i>Trayectoria de una partícula: entra por el ojo, cruza el impulsor una sola vez y sale por la voluta.</p>
+      <p class="inset-l">Corte: recorrido del líquido</p>
+      <canvas id="in-c" width="440" height="170" role="img" aria-label="Corte meridional: el líquido entra por el ojo y sale radialmente una sola vez"></canvas>
+      <div class="meters">
+        <span>Caudal</span><span class="v" id="c-q"></span><span class="track"><i id="cb-q"></i></span>
+        <span>Cabeza</span><span class="v" id="c-h"></span><span class="track"><i id="cb-h"></i></span>
+        <span>Potencia en el eje</span><span class="v" id="c-b"></span><span class="track"><i id="cb-b"></i></span>
+        <span>Par en el eje</span><span class="v" id="c-t"></span><span class="track"><i id="cb-t"></i></span>
+        <span>Corriente</span><span class="v" id="c-i"></span><span class="track cur"><i id="cb-i"></i></span>
+      </div>
+      <div class="text" aria-live="polite"><h3 id="c-th"></h3><p id="c-tx"></p></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-p">
+      <h2 id="h-p">Periférica <small>turbina regenerativa · canal anular</small></h2>
+      <canvas id="cv-p" width="440" height="420" role="img" aria-label="Vista frontal de una bomba periférica con el líquido recorriendo el canal anular"></canvas>
+      <p class="cap" id="p-cap" hidden><i class="tr"></i>Trayectoria de una partícula. Cada zigzag, de la celda del álabe al canal y de vuelta, es una vuelta del vórtice. Al cerrar la válvula los zigzags se aprietan: el líquido pasa más veces por las celdas sin avanzar.</p>
+      <p class="inset-l">Corte del canal: el vórtice</p>
+      <canvas id="in-p" width="440" height="170" role="img" aria-label="Corte del canal: el líquido circula entre la celda del álabe y el canal muchas veces"></canvas>
+      <div class="meters">
+        <span>Caudal</span><span class="v" id="p-q"></span><span class="track"><i id="pb-q"></i></span>
+        <span>Cabeza</span><span class="v" id="p-h"></span><span class="track"><i id="pb-h"></i></span>
+        <span>Potencia en el eje</span><span class="v" id="p-b"></span><span class="track"><i id="pb-b"></i></span>
+        <span>Par en el eje</span><span class="v" id="p-t"></span><span class="track"><i id="pb-t"></i></span>
+        <span>Corriente</span><span class="v" id="p-i"></span><span class="track cur"><i id="pb-i"></i></span>
+      </div>
+      <div class="text" aria-live="polite"><h3 id="p-th"></h3><p id="p-tx"></p></div>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="h-a">
+    <h2 id="h-a">Del eje al amperímetro</h2>
+    <div class="wide">
+      <div>
+        <svg class="chart" id="chart" viewBox="0 0 600 300" role="img" aria-label="Corriente y potencia en el eje, relativas a la válvula abierta, contra la apertura de la válvula"></svg>
+        <div class="legend">
+          <span><i class="sw c"></i>Corriente, centrífuga</span><span><i class="sw p"></i>Corriente, periférica</span>
+          <span><i class="sw cb"></i>bhp, centrífuga</span><span><i class="sw pb"></i>bhp, periférica</span>
+        </div>
+        <svg class="chart second" id="chart-e" viewBox="0 0 600 300" role="img" aria-label="Eficiencia de la bomba contra caudal relativo a la válvula abierta"></svg>
+        <div class="legend">
+          <span><i class="sw c"></i>η bomba, centrífuga</span><span><i class="sw p"></i>η bomba, periférica</span>
+        </div>
+      </div>
+      <div class="common">
+        <p>El motor de inducción gira casi a velocidad constante, así que la potencia en el eje sigue al par: <span class="eq">bhp = ω·T</span></p>
+        <p>Para entregar más par, el motor toma más potencia activa de la red y su corriente activa crece. La corriente total también lleva una parte de magnetización que casi no depende de la carga:</p>
+        <p><span class="eq">I = √(I<sub>activa</sub>² + I<sub>mag</sub>²)</span></p>
+        <p>Por eso la corriente cambia en el mismo sentido que el bhp, pero menos. Consecuencia práctica: la centrífuga se arranca con la descarga cerrada, porque así pide menos potencia; la periférica, con la descarga abierta.</p>
+        <p>Las curvas de eficiencia, en cambio, sí tienen la misma forma en las dos bombas: cero con la válvula cerrada, un máximo y después bajan. La razón es que η = P<sub>w</sub>/bhp, y P<sub>w</sub> = ρ·g·Q·H se anula a caudal cero en ambas, sin importar si el bhp sube o baja. La eficiencia no distingue los dos comportamientos: la diferencia está en el denominador, en adónde se va la potencia del eje. Lo que sí cambia es el nivel: la periférica tiene una eficiencia máxima mucho menor.</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">Esquemas, curvas y mapas de color ilustrativos: los mapas salen de un modelo simple que reproduce las tendencias, no de una simulación CFD. Ambos mapas usan la misma escala para las dos bombas, así que los colores se pueden comparar entre ellas. No son los equipos del laboratorio. Ambas bombas usan un motor monofásico de 110 V modelado con pérdidas fijas y corriente de magnetización constante. Las velocidades de giro y de las partículas están reducidas para que se puedan seguir con la vista.</p>
+</div>
+
+<script>
+(function(){
+const RHOG=998*9.81,V=110,IM=2.5,P0=60,KM=0.85,W=3450*2*Math.PI/60;
+const MODEL={
+  c:{H0:Q=>22-9.722e-4*Q*Q,B0:Q=>190+2.3125*Q,Qm:150.4,Rp:6.8e-4,hs:2,max:{q:120,h:25,b:500,t:1.4,i:7}},
+  p:{H0:Q=>34-0.65*Q-0.005*Q*Q,B0:Q=>330-2.86*Q,Qm:40,Rp:0.01,hs:1,max:{q:35,h:36,b:360,t:1.0,i:6}}
+};
+function op(k,o){const m=MODEL[k];let Q=0;
+  if(o>0.005){const R=m.Rp*(1+1.5*(1/(o*o)-1));const f=q=>m.H0(q)-(m.hs+R*q*q);
+    if(f(0)>0){let a=0,b=m.Qm;for(let i=0;i<50;i++){const c=(a+b)/2;if(f(c)>0)a=c;else b=c;}Q=(a+b)/2;}}
+  const H=Math.max(0,m.H0(Q)),b=m.B0(Q),Pw=RHOG*Q/60000*H,Pel=P0+b/KM,Ia=Pel/V,I=Math.hypot(Ia,IM);
+  return{Q,H,b,Pw,Pel,I,T:b/W};}
+const OPEN={c:op('c',1),p:op('p',1)};
+const $=id=>document.getElementById(id);
+const NF=(v,d=1)=>v.toLocaleString('es-CR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let COL={};
+function readCols(){const s=getComputedStyle(document.documentElement);const g=n=>s.getPropertyValue(n).trim();
+  COL={bg:g('--bg'),panel:g('--panel'),ink:g('--ink'),muted:g('--muted'),line:g('--line'),pump:g('--pump'),water:g('--water'),metal:g('--metal'),casing:g('--casing'),heat:g('--heat')};}
+readCols();
+if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readCols();});
+new MutationObserver(readCols).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+function rgba(hex,a){const h=hex.replace('#','');const n=parseInt(h.length===3?h.split('').map(x=>x+x).join(''):h,16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+function setup(cv){const d=Math.min(2,window.devicePixelRatio||1);const w=+cv.getAttribute('width'),h=+cv.getAttribute('height');
+  cv.width=w*d;cv.height=h*d;cv.style.aspectRatio=w+'/'+h;const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);return{x,w,h};}
+const CC=setup($('cv-c')),CP=setup($('cv-p')),IC=setup($('in-c')),IP=setup($('in-p'));
+const FONT='500 12.5px Barlow, system-ui, sans-serif';
+function arrow(x,x1,y1,x2,y2,col,w=2){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=w;x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);x.beginPath();x.moveTo(x2,y2);x.lineTo(x2-9*Math.cos(a-0.4),y2-9*Math.sin(a-0.4));x.lineTo(x2-9*Math.cos(a+0.4),y2-9*Math.sin(a+0.4));x.closePath();x.fill();}
+function label(x,text,tx,ty,px,py,align='left'){x.font=FONT;x.fillStyle=COL.ink;x.textAlign=align;x.textBaseline='middle';
+  const lines=text.split('\n');lines.forEach((l,i)=>x.fillText(l,tx,ty+(i-(lines.length-1)/2)*15));
+  if(px===undefined)return;const w=Math.max(...lines.map(l=>x.measureText(l).width));let sx;
+  if(align==='left')sx=px>tx+w?tx+w+4:tx-4;else sx=px<tx-w?tx-w-4:tx+4;
+  x.strokeStyle=COL.muted;x.lineWidth=1;x.beginPath();x.moveTo(sx,ty);x.lineTo(px,py);x.stroke();x.fillStyle=COL.muted;x.beginPath();x.arc(px,py,2.2,0,7);x.fill();}
+
+let o=1,target=null,paused=RM,step=1,phi=0,field='p';
+const LUT=new Uint8ClampedArray(256*3);
+const STOPS=[[0,[24,52,224]],[0.25,[0,190,235]],[0.5,[40,205,90]],[0.75,[248,222,40]],[1,[222,38,32]]];
+for(let i=0;i<256;i++){const t=i/255;let k=0;while(k<STOPS.length-2&&t>STOPS[k+1][0])k++;const [t0,c0]=STOPS[k],[t1,c1]=STOPS[k+1];const u=(t-t0)/(t1-t0);
+  for(let j=0;j<3;j++)LUT[i*3+j]=c0[j]+(c1[j]-c0[j])*u;}
+$('cb-grad').style.background='linear-gradient(90deg,'+[0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].map(t=>{const i=Math.round(t*255);return`rgb(${LUT[i*3]},${LUT[i*3+1]},${LUT[i*3+2]}) ${t*100}%`;}).join(',')+')';
+const PMAX=350,VMAX=1.1,SC=3,GW=Math.ceil(440/SC),GH=Math.ceil(420/SC);
+function mkOff(){const c=document.createElement('canvas');c.width=GW;c.height=GH;return{c,x:c.getContext('2d'),img:new ImageData(GW,GH)};}
+const OFF={c:mkOff(),p:mkOff()};
+const showField=()=>(step===2||step===3)&&field!=='n';
+function paintField(k,fn){const o2=OFF[k],d=o2.img.data;let idx=0;
+  for(let j=0;j<GH;j++){const y=(j+0.5)*SC;for(let i=0;i<GW;i++,idx+=4){const v=fn((i+0.5)*SC,y);
+    if(v===null){d[idx+3]=0;continue;}const t=Math.max(0,Math.min(255,Math.round(v*255)))*3;d[idx]=LUT[t];d[idx+1]=LUT[t+1];d[idx+2]=LUT[t+2];d[idx+3]=255;}}
+  o2.x.putImageData(o2.img,0,0);}
+function blitField(x,k){x.save();x.imageSmoothingEnabled=true;x.drawImage(OFF[k].c,0,0,GW*SC,GH*SC);x.restore();}
+function updateBar(){for(const [id,v] of [['f-p','p'],['f-v','v'],['f-n','n']])$(id).setAttribute('aria-pressed',field===v);
+  $('cbar').hidden=field==='n';
+  if(field==='p'){$('cb-name').textContent='Presión manométrica (kPa)';$('cb-min').textContent='0';$('cb-max').textContent='350';}
+  else{$('cb-name').textContent='Velocidad relativa al borde del impulsor, v/U';$('cb-min').textContent='0';$('cb-max').textContent='1,1';}}
+
+const STEP={
+ 1:{h:'Construcción',
+  c:'El líquido entra en dirección axial por el ojo, en el centro del impulsor. Recorre una sola vez el canal entre dos álabes curvados hacia atrás y sale por la periferia a la voluta, cuya área crece para convertir velocidad en presión. Las holguras son relativamente grandes.',
+  p:'Un disco con muchos álabes radiales cortos en el borde gira dentro de un canal anular. La entrada y la salida están en la periferia, una junto a la otra, separadas por un tabique: el líquido tiene que recorrer casi toda la vuelta por el canal. Las holguras laterales son muy finas.'},
+ 2:{h:'Cómo recibe energía el líquido',
+  c:'Cada partícula pasa una vez por el impulsor. La energía que gana por kilogramo la fija la ecuación de Euler, g·H ≈ U₂·Vθ₂, y depende sobre todo de la velocidad periférica. La potencia es esa energía por kilogramo multiplicada por el flujo másico: Pw = ṁ·g·H. En el mapa de presión, la presión sube con el radio dentro del impulsor y termina de recuperarse en la voluta; en el de velocidad, el máximo está en la punta de los álabes.',
+  p:'El líquido entra y sale de las celdas entre álabes muchas veces mientras avanza, en una trayectoria helicoidal. En cada pasada el álabe lo acelera y en el canal cede esa cantidad de movimiento al resto del líquido, como en un acople hidráulico. La presión se acumula pasada tras pasada: en el mapa de presión el canal pasa de la entrada a la salida por todo el espectro. En el de velocidad, las celdas van casi a la velocidad del borde y el canal más lento.'},
+ 3:{h:'Al estrangular la descarga',
+  c:'El flujo másico cae mucho y la cabeza sube poco. Como la potencia es flujo másico por energía por kilogramo, el bhp baja. Con la válvula cerrada solo queda la potencia de las pérdidas, fricción de disco y recirculación en el impulsor, que se convierte en calor. En el mapa de velocidad, la voluta casi se detiene mientras el líquido del impulsor sigue girando con él.',
+  p:'La presión sube más a lo largo del canal y frena el avance del líquido. Los álabes siguen pasando a la misma velocidad sobre un líquido casi detenido: el deslizamiento entre ambos crece, el vórtice se intensifica (los zigzags de la trayectoria marcada se aprietan) y el par aumenta. En el mapa de velocidad se ve como celdas rojas sobre un canal azul. Con la válvula cerrada el par es máximo y toda esa potencia calienta el líquido atrapado.'},
+ 4:{h:'Lo que marca el amperímetro',
+  c:'Al cerrar la válvula baja el par en el eje, el motor toma menos potencia activa y la corriente baja. Baja menos que el bhp porque la corriente de magnetización se mantiene.',
+  p:'Al cerrar la válvula sube el par en el eje, el motor toma más potencia activa y la corriente sube. Contra la válvula cerrada el motor trabaja a su máxima carga y el líquido se calienta: por eso no se opera así.'}
+};
+function setStep(n){step=n;for(let i=1;i<=4;i++)$('s'+i).setAttribute('aria-selected',i===n);
+  $('c-th').textContent=STEP[n].h;$('p-th').textContent=STEP[n].h;$('c-tx').textContent=STEP[n].c;$('p-tx').textContent=STEP[n].p;
+  $('field').hidden=!(n===2||n===3);$('c-cap').hidden=!(n===2||n===3);$('p-cap').hidden=!(n===2||n===3);if(n===2&&field==='n')field='p';updateBar();
+  if(n===3&&o>0.5)target=0;if(paused)drawAll(0);}
+
+/* ---------- Centrífuga: geometría y partículas ---------- */
+const cg={cx:200,cy:248,R1:32,R2:104,r0:112,r1:164,A0:-Math.PI/2};
+const rw=a=>cg.r0+(cg.r1-cg.r0)*(a-cg.A0)/(2*Math.PI);
+const cImp=[],cVol=[],cPipe=[];
+for(let i=0;i<34;i++)cImp.push({r:cg.R1+Math.random()*(cg.R2-cg.R1),a:Math.random()*6.283});
+for(let i=0;i<70;i++)cVol.push({a:cg.A0+0.05+Math.random()*6.1,f:Math.random()});
+for(let i=0;i<10;i++)cPipe.push({x:cg.cx+Math.random()*(440-cg.cx),f:Math.random()});
+const TC={ph:'imp',r:cg.R1+2,a:0,f:0.6,x:0,y:0,trail:[]};
+function posC(t){const {cx,cy,R2,r0,r1}=cg;if(t.ph==='imp')return[cx+t.r*Math.cos(t.a),cy+t.r*Math.sin(t.a)];
+  if(t.ph==='vol')return[cx+t.r*Math.cos(t.a),cy+t.r*Math.sin(t.a)];
+  return[t.x,t.y];}
+function tracerStepC(dt,q){const t=TC;
+  if(t.ph==='imp'){t.a+=1.4*0.85*dt;t.r+=48*q*dt;if(t.r>cg.R2){t.ph='vol';t.a=((t.a%(2*Math.PI))+2*Math.PI)%(2*Math.PI);while(t.a<cg.A0)t.a+=2*Math.PI;while(t.a>=cg.A0+2*Math.PI)t.a-=2*Math.PI;}}
+  else if(t.ph==='vol'){t.a+=(0.25+0.95*q)*q*dt;const rt=cg.R2+5+t.f*Math.max(2,rw(t.a)-cg.R2-11);t.r+=(rt-t.r)*Math.min(1,dt*1.2*Math.max(q,0.05));
+    if(t.a>=cg.A0+2*Math.PI-0.02&&q>0.01){t.ph='pipe';t.x=cg.cx;t.y=cg.cy-t.r;}}
+  else{t.x+=95*q*dt;t.y+=(cg.cy-(cg.r0+cg.r1)/2-t.y)*Math.min(1,dt*2*q);if(t.x>445){t.ph='imp';t.r=cg.R1+2;t.a=Math.random()*6.283;t.trail=[];}}
+  t.trail.push(posC(t));if(t.trail.length>900)t.trail.shift();}
+function drawTrail(x,tr){if(tr.length<2)return;x.lineJoin='round';x.lineCap='round';x.beginPath();tr.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));
+  x.strokeStyle='rgba(255,255,255,.92)';x.lineWidth=5;x.stroke();x.strokeStyle='#111';x.lineWidth=2.2;x.stroke();
+  const h=tr[tr.length-1];x.fillStyle=COL.pump;x.strokeStyle='#fff';x.lineWidth=1.5;x.beginPath();x.arc(h[0],h[1],5,0,7);x.fill();x.stroke();}
+function stepC(dt,s){const q=s.Q/OPEN.c.Q;tracerStepC(dt,q);
+  for(const p of cImp){p.a+=1.4*0.85*dt;p.r+=48*q*dt;if(p.r>cg.R2){cVol.push({a:p.a%(2*Math.PI),f:Math.random()});p.r=cg.R1+Math.random()*4;p.a=Math.random()*6.283;}}
+  for(let i=cVol.length-1;i>=0;i--){const p=cVol[i];let a=p.a;while(a<cg.A0)a+=2*Math.PI;while(a>=cg.A0+2*Math.PI)a-=2*Math.PI;
+    if(p.a!==a)p.a=a;p.a+=(0.25+0.95*q)*q*dt*1.0+0;if(p.a>=cg.A0+2*Math.PI-0.02&&q>0.01){cVol.splice(i,1);cPipe.push({x:cg.cx,f:p.f});}}
+  for(let i=cPipe.length-1;i>=0;i--){cPipe[i].x+=95*q*dt;if(cPipe[i].x>445)cPipe.splice(i,1);}
+  if(cVol.length>220)cVol.splice(0,cVol.length-220);}
+function drawC(s){const {x,w,h}=CC,{cx,cy,R1,R2,r0,r1,A0}=cg;x.clearRect(0,0,w,h);
+  // carcasa (voluta) y tubo de descarga
+  const vol=new Path2D();for(let i=0;i<=120;i++){const a=A0+0.03+(2*Math.PI-0.03)*i/120,r=rw(a);const px=cx+r*Math.cos(a),py=cy+r*Math.sin(a);i?vol.lineTo(px,py):vol.moveTo(px,py);}
+  vol.lineTo(w,cy-r1);vol.lineTo(w,cy-r0);vol.lineTo(cx,cy-r0);vol.closePath();
+  x.fillStyle=COL.casing;x.save();x.translate(0,0);x.lineWidth=14;x.strokeStyle=COL.casing;x.stroke(vol);x.restore();
+  x.fillStyle=rgba(COL.water,0.10+0.32*s.H/MODEL.c.max.h);x.fill(vol);
+  const FLD=showField();if(FLD){paintField('c',(px,py)=>fieldC(px,py,s));x.save();x.clip(vol);blitField(x,'c');x.restore();}
+  x.lineWidth=2.4;x.strokeStyle=COL.ink;x.beginPath();for(let i=0;i<=120;i++){const a=A0+0.03+(2*Math.PI-0.03)*i/120,r=rw(a);const px=cx+r*Math.cos(a),py=cy+r*Math.sin(a);i?x.lineTo(px,py):x.moveTo(px,py);}x.lineTo(w,cy-r1);x.stroke();
+  x.beginPath();x.moveTo(cx,cy-r0);x.lineTo(w,cy-r0);x.stroke();
+  // calor
+  if(!FLD){const heat=Math.max(0,(s.b-s.Pw))/MODEL.c.max.b;x.fillStyle=rgba(COL.heat,0.05+0.4*heat*heat);x.beginPath();x.arc(cx,cy,R2+6,0,7);x.fill();}
+  // impulsor
+  if(!FLD){x.fillStyle=rgba(COL.metal,0.14);x.beginPath();x.arc(cx,cy,R2,0,7);x.fill();}
+  x.strokeStyle=COL.metal;x.lineWidth=5;x.lineCap='round';
+  for(let k=0;k<6;k++){const b0=phi+k*Math.PI/3;x.beginPath();for(let j=0;j<=10;j++){const r=R1+(R2-R1)*j/10;const a=b0-1.0*j/10;const px=cx+r*Math.cos(a),py=cy+r*Math.sin(a);j?x.lineTo(px,py):x.moveTo(px,py);}x.stroke();}
+  x.lineWidth=1.5;x.strokeStyle=COL.metal;x.beginPath();x.arc(cx,cy,R2,0,7);x.stroke();
+  x.beginPath();x.arc(cx,cy,R1,0,7);if(!FLD){x.fillStyle=rgba(COL.water,0.25);x.fill();}x.strokeStyle=COL.ink;x.lineWidth=1.2;x.stroke();
+  x.fillStyle=COL.metal;x.beginPath();x.arc(cx,cy,9,0,7);x.fill();
+  // partículas
+  const dot=(px,py)=>{x.beginPath();x.arc(px,py,FLD?2:2.3,0,7);x.fill();if(FLD)x.stroke();};
+  x.fillStyle=FLD?'#fff':COL.water;x.strokeStyle='rgba(0,0,0,.55)';x.lineWidth=0.8;
+  for(const p of cImp)dot(cx+p.r*Math.cos(p.a),cy+p.r*Math.sin(p.a));
+  for(const p of cVol){const r=R2+5+p.f*Math.max(2,rw(p.a)-R2-11);dot(cx+r*Math.cos(p.a),cy+r*Math.sin(p.a));}
+  for(const p of cPipe)dot(p.x,cy-(r0+4+p.f*(r1-r0-8)));
+  if(step===2||step===3)drawTrail(x,TC.trail);
+  // flechas fijas
+  arrow(x,w-60,cy-(r0+r1)/2,w-12,cy-(r0+r1)/2,COL.water,2);
+  x.strokeStyle=COL.pump;x.lineWidth=2;x.beginPath();x.arc(cx,cy,R2+20,0.15*Math.PI,0.45*Math.PI);x.stroke();
+  const ae=0.45*Math.PI;arrow(x,cx+(R2+20)*Math.cos(ae-0.05),cy+(R2+20)*Math.sin(ae-0.05),cx+(R2+20)*Math.cos(ae+0.02),cy+(R2+20)*Math.sin(ae+0.02),COL.pump,2);
+  if(step===1){label(x,'Ojo del impulsor\n(entrada axial)',16,h-30,cx-14,cy+18);
+    label(x,'Álabes curvados\nhacia atrás',w-120,h-34,cx+60,cy+52);
+    label(x,'Voluta',14,cy-40,cx-r1+16,cy-30);
+    label(x,'Descarga',w-8,cy-r1-18,w-30,cy-(r0+r1)/2-8,'right');
+    label(x,'Lengüeta',cx-70,cy-r0-58,cx+4,cy-r0+2);}
+  else{x.font=FONT;x.fillStyle=COL.muted;x.textAlign='left';x.textBaseline='alphabetic';x.fillText('Giro del impulsor',cx+R2-6,cy+R2+34);}
+}
+
+function fieldC(px,py,s){const {cx,cy,R1,R2,r0,r1,A0}=cg;const q=Math.min(1.2,s.Q/OPEN.c.Q);const Hk=s.H*9.79;const P=field==='p';
+  if(px>=cx&&py>=cy-r1&&py<=cy-r0){const f=(px-cx)/(440-cx);return P?Hk*(0.93+0.07*f)/PMAX:(0.06+0.42*q)/VMAX;}
+  const dx=px-cx,dy=py-cy,r=Math.hypot(dx,dy);let a=Math.atan2(dy,dx);while(a<A0)a+=2*Math.PI;while(a>=A0+2*Math.PI)a-=2*Math.PI;
+  const rwall=rw(a);if(r>rwall+2)return null;
+  if(r<R1)return P?0:(0.18+0.22*q)/VMAX;
+  if(r<=R2){const t=(r-R1)/(R2-R1),t2=(r*r-R1*R1)/(R2*R2-R1*R1),per=Math.PI/3;const th=a-phi+1.0*t;const u=(((th%per)+per)%per)/per;const sb=Math.sin(Math.PI*t);
+    if(P)return Hk*(0.68*t2+0.10*(0.5-u)*sb)/PMAX;
+    const vth=(r/R2)*(0.92-0.27*q),vr=0.16*q;return(Math.hypot(vth,vr)+0.12*(u-0.5)*sb)/VMAX;}
+  const prog=(a-A0)/(2*Math.PI),fr=(r-R2)/Math.max(1,rwall-R2);
+  if(P)return Hk*(0.72+0.18*prog+0.06*fr)/PMAX;
+  return((0.12+0.5*q)*Math.sqrt(R2/r)*(1-0.25*fr))/VMAX;}
+function fieldP(px,py,s){const {cx,cy,rd,rv,rc,ain,aout,aS,half}=pg;const q=Math.min(1.2,s.Q/OPEN.p.Q);const Hk=s.H*9.79;const P=field==='p';
+  const xin=portX(ain),xout=portX(aout);
+  if(py<=yPort&&Math.abs(px-xin)<=13)return P?0:(0.05+0.3*q)/VMAX;
+  if(py<=yPort&&Math.abs(px-xout)<=13)return P?Hk/PMAX:(0.05+0.3*q)/VMAX;
+  const dx=px-cx,dy=py-cy,r=Math.hypot(dx,dy);if(r<rd-1||r>rc+2)return null;
+  let a=Math.atan2(dy,dx);while(a<ain)a+=2*Math.PI;while(a>=ain+2*Math.PI)a-=2*Math.PI;
+  const inCell=r<=rv,T=2*Math.PI;let p;
+  if(a<=aout)p=(a-ain)/(aout-ain);
+  else if(a<aS-half+T)p=1;
+  else if(a<=aS+half+T){if(!inCell)return null;p=1-(a-(aS-half+T))/(2*half);}
+  else p=0;
+  if(P)return Hk*(p+0.03*(r-rd)/(rc-rd))/PMAX;
+  if(inCell)return(0.92*r/rv)/VMAX;
+  const f=(r-rv)/(rc-rv);return((0.16+0.40*q)*(1-0.45*f)+0.1*(1-Math.min(1,q))*Math.exp(-((f-0.5)**2)/0.05))/VMAX;}
+
+/* ---------- Periférica ---------- */
+const pg={cx:212,cy:250,rd:100,rv:122,rc:150,rcase:160,aS:-Math.PI/2,half:8*Math.PI/180};
+pg.ain=pg.aS+16*Math.PI/180;pg.aout=pg.aS-16*Math.PI/180+2*Math.PI;
+const portX=a=>pg.cx+136*Math.cos(a);
+const pCh=[],pIn=[],pOut=[];
+for(let i=0;i<70;i++)pCh.push({s:Math.random(),psi:Math.random()*6.283,f:Math.random()});
+for(let i=0;i<6;i++)pIn.push({y:20+Math.random()*(pg.cy-pg.rc-20),f:Math.random()});
+const yPort=pg.cy-Math.sqrt(pg.rc*pg.rc-136*Math.cos(pg.ain)*136*Math.cos(pg.ain))+6;
+let vortexW=2;
+const TP={s:0,psi:0,trail:[]};
+function tracerStepP(dt,q){const t=TP;t.psi+=vortexW*dt;t.s+=(0.085*q+0.028*(-Math.sin(t.psi)))*dt;
+  if(t.s>1){if(q>0.02){t.s=0;t.psi=0;t.trail=[];}else t.s=1;}if(t.s<0)t.s=0;
+  const a=pg.ain+(pg.aout-pg.ain)*t.s,r=127+17*Math.sin(t.psi);t.trail.push([pg.cx+r*Math.cos(a),pg.cy+r*Math.sin(a)]);if(t.trail.length>900)t.trail.shift();}
+function stepP(dt,s){const q=s.Q/OPEN.p.Q;vortexW=5.2*(0.9+1.3*(1-Math.min(1,q)));tracerStepP(dt,q);
+  for(const p of pCh){p.psi+=vortexW*dt;p.s+=(0.085*q+0.028*(-Math.sin(p.psi)))*dt;
+    if(p.s>1){if(q>0.02){pOut.push({y:yPort,f:p.f});p.s=0;p.psi=Math.random()*6.283;}else p.s=1;}
+    if(p.s<0)p.s=0;}
+  for(let i=pOut.length-1;i>=0;i--){pOut[i].y-=60*q*dt;if(pOut[i].y<-5)pOut.splice(i,1);}
+  for(const p of pIn){p.y+=60*q*dt;if(p.y>yPort)p.y=10;}}
+function drawP(s){const {x,w,h}=CP,{cx,cy,rd,rv,rc,rcase,ain,aout,aS,half}=pg;x.clearRect(0,0,w,h);
+  const xin=portX(ain),xout=portX(aout);
+  // tubos
+  const FLD=showField();
+  if(!FLD){x.fillStyle=rgba(COL.water,0.18);x.fillRect(xin-13,0,26,yPort+4);x.fillRect(xout-13,0,26,yPort+4);}
+  x.strokeStyle=COL.ink;x.lineWidth=2;[[xin],[xout]].forEach(([px])=>{x.beginPath();x.moveTo(px-13,0);x.lineTo(px-13,yPort+2);x.moveTo(px+13,0);x.lineTo(px+13,yPort+2);x.stroke();});
+  // carcasa
+  x.fillStyle=COL.casing;x.beginPath();x.arc(cx,cy,rcase+6,0,7);x.fill();
+  if(FLD){paintField('p',(px,py)=>fieldP(px,py,s));
+    x.save();x.beginPath();x.arc(cx,cy,rc,0,2*Math.PI);x.arc(cx,cy,rd,2*Math.PI,0,true);x.clip();blitField(x,'p');x.restore();
+    x.save();x.beginPath();x.rect(xin-13,0,26,yPort);x.rect(xout-13,0,26,yPort);x.clip();blitField(x,'p');x.restore();}
+  else{
+  // canal con gradiente de presión
+  const N=56;for(let k=0;k<N;k++){const a0=ain+(aout-ain)*k/N,a1=ain+(aout-ain)*(k+1)/N+0.01,sm=(k+0.5)/N;
+    x.fillStyle=rgba(COL.water,0.10+0.62*(s.H*sm)/MODEL.p.max.h);x.beginPath();x.arc(cx,cy,rc,a0,a1);x.arc(cx,cy,rd+2,a1,a0,true);x.closePath();x.fill();}
+  // zona de puertos
+  x.fillStyle=rgba(COL.water,0.12);x.beginPath();x.arc(cx,cy,rc,aout,aout+(aS-half-aout+2*Math.PI));x.arc(cx,cy,rd+2,aS-half,aout,true);x.fill();
+  x.fillStyle=rgba(COL.water,0.12);x.beginPath();x.arc(cx,cy,rc,aS+half,ain);x.arc(cx,cy,rd+2,ain,aS+half,true);x.fill();
+  }
+  // tabique
+  x.fillStyle=COL.casing;x.beginPath();x.arc(cx,cy,rcase+6,aS-half,aS+half);x.arc(cx,cy,rv+1.5,aS+half,aS-half,true);x.closePath();x.fill();
+  x.strokeStyle=COL.ink;x.lineWidth=1.2;x.stroke();
+  x.strokeStyle=COL.ink;x.lineWidth=2.2;x.beginPath();x.arc(cx,cy,rc,ain,aout);x.stroke();
+  // calor
+  if(!FLD){const heat=Math.max(0,(s.b-s.Pw))/MODEL.p.max.b;x.fillStyle=rgba(COL.heat,0.05+0.4*heat*heat);x.beginPath();x.arc(cx,cy,rc,0,7);x.fill();}
+  // disco y álabes
+  x.fillStyle=rgba(COL.metal,0.35);x.beginPath();x.arc(cx,cy,rd,0,7);x.fill();
+  x.strokeStyle=COL.metal;x.lineWidth=3;x.lineCap='butt';
+  for(let k=0;k<36;k++){const a=phi+k*2*Math.PI/36;x.beginPath();x.moveTo(cx+rd*Math.cos(a),cy+rd*Math.sin(a));x.lineTo(cx+rv*Math.cos(a),cy+rv*Math.sin(a));x.stroke();}
+  x.lineWidth=1.2;x.beginPath();x.arc(cx,cy,rd,0,7);x.stroke();
+  x.fillStyle=COL.metal;x.beginPath();x.arc(cx,cy,12,0,7);x.fill();
+  // partículas
+  const dot=(px,py)=>{x.beginPath();x.arc(px,py,FLD?2:2.3,0,7);x.fill();if(FLD)x.stroke();};
+  x.fillStyle=FLD?'#fff':COL.water;x.strokeStyle='rgba(0,0,0,.55)';x.lineWidth=0.8;
+  for(const p of pCh){const a=ain+(aout-ain)*p.s;const r=127+17*Math.sin(p.psi);dot(cx+r*Math.cos(a),cy+r*Math.sin(a));}
+  for(const p of pIn)dot(xin-8+p.f*16,p.y);
+  for(const p of pOut)dot(xout-8+p.f*16,p.y);
+  if(step===2||step===3)drawTrail(x,TP.trail);
+  arrow(x,xin,8,xin,40,COL.water,2);arrow(x,xout,44,xout,10,COL.water,2);
+  x.strokeStyle=COL.pump;x.lineWidth=2;x.beginPath();x.arc(cx,cy,rcase+18,0.05*Math.PI,0.3*Math.PI);x.stroke();
+  const ae=0.3*Math.PI;arrow(x,cx+(rcase+18)*Math.cos(ae-0.05),cy+(rcase+18)*Math.sin(ae-0.05),cx+(rcase+18)*Math.cos(ae+0.02),cy+(rcase+18)*Math.sin(ae+0.02),COL.pump,2);
+  if(step===1){label(x,'Entrada',xin+22,26);label(x,'Salida',xout-22,26,undefined,undefined,'right');
+    label(x,'Tabique',w-14,yPort+34,cx+4,cy-rc+8,'right');
+    label(x,'Canal anular',14,cy-60,cx-rc+14,cy-50);
+    label(x,'Álabes radiales\nen la periferia',14,h-34,cx-78,cy+70);
+    label(x,'Disco',w-80,h-28,cx+40,cy+40);}
+  else if(!FLD){x.font=FONT;x.fillStyle=COL.muted;x.textAlign='right';x.textBaseline='alphabetic';
+    x.fillText('Presión en el canal: tono más intenso = mayor',w-8,h-8);}
+}
+
+/* ---------- Cortes ---------- */
+const cPath=[];(function(){const P=[[8,124],[170,124],[230,124],[250,92],[256,46]];
+  for(let i=0;i<=40;i++){const t=i/40;cPath.push([8+(170-8)*t,124]);}
+  for(let i=1;i<=50;i++){const t=i/50,u=1-t;const bx=u*u*u*170+3*u*u*t*228+3*u*t*t*252+t*t*t*256,by=u*u*u*124+3*u*u*t*124+3*u*t*t*96+t*t*t*44;cPath.push([bx,by]);}void P;})();
+const cTot=cPath.length-1;const cIn=[];for(let i=0;i<22;i++)cIn.push({t:Math.random()});
+function drawIC(s,dt){const {x,w,h}=IC;x.clearRect(0,0,w,h);const q=s.Q/OPEN.c.Q;
+  x.strokeStyle=COL.muted;x.setLineDash([10,4,2,4]);x.lineWidth=1;x.beginPath();x.moveTo(4,156);x.lineTo(w-4,156);x.stroke();x.setLineDash([]);
+  x.fillStyle=rgba(COL.water,0.16);x.beginPath();x.moveTo(0,100);x.lineTo(180,100);x.quadraticCurveTo(232,100,238,34);x.lineTo(276,34);x.lineTo(276,150);x.lineTo(0,150);x.closePath();x.fill();
+  // volute section
+  x.fillStyle=rgba(COL.water,0.22);x.beginPath();x.arc(258,24,20,0,7);x.fill();x.strokeStyle=COL.ink;x.lineWidth=1.6;x.stroke();
+  // hub / impeller body
+  x.fillStyle=rgba(COL.metal,0.55);x.beginPath();x.moveTo(190,150);x.quadraticCurveTo(262,150,266,52);x.lineTo(280,52);x.lineTo(280,150);x.closePath();x.fill();
+  x.strokeStyle=COL.ink;x.lineWidth=2;x.beginPath();x.moveTo(0,100);x.lineTo(180,100);x.quadraticCurveTo(232,100,238,40);x.stroke();
+  x.beginPath();x.moveTo(0,150);x.lineTo(190,150);x.stroke();
+  x.fillStyle=COL.metal;x.fillRect(280,146,w-280,14);
+  for(const p of cIn){p.t+=0.32*q*dt;if(p.t>1)p.t-=1;const pt=cPath[Math.min(cTot,Math.floor(p.t*cTot))];x.fillStyle=COL.water;x.beginPath();x.arc(pt[0],pt[1]+(p.t<0.45?((cIn.indexOf(p)%5)-2)*7:0),2.4,0,7);x.fill();}
+  x.font=FONT;x.fillStyle=COL.ink;x.textAlign='left';x.textBaseline='middle';
+  x.fillText('Entra axial por el ojo',10,82);
+  x.fillText('Sale radial,',286,46);x.fillText('una sola vez',286,61);x.fillText('Voluta',284,16);
+  x.fillStyle=COL.muted;x.fillText('Eje',296,134);
+}
+const vL=[],vR=[];for(let i=0;i<9;i++){vL.push(i/9*6.283);vR.push(i/9*6.283);}
+function drawIP(s,dt){const {x,w,h}=IP;x.clearRect(0,0,w,h);const q=s.Q/OPEN.p.Q;
+  x.strokeStyle=COL.muted;x.setLineDash([10,4,2,4]);x.lineWidth=1;x.beginPath();x.moveTo(4,162);x.lineTo(w-4,162);x.stroke();x.setLineDash([]);
+  // casing
+  x.fillStyle=COL.casing;x.fillRect(150,8,136,104);
+  // channel cavity (horseshoe)
+  x.fillStyle=rgba(COL.water,0.10+0.5*s.H/MODEL.p.max.h);x.beginPath();x.moveTo(166,110);x.lineTo(166,40);x.quadraticCurveTo(166,20,190,20);x.lineTo(246,20);x.quadraticCurveTo(270,20,270,40);x.lineTo(270,110);x.closePath();x.fill();
+  // disk and vane cell
+  x.fillStyle=rgba(COL.metal,0.6);x.fillRect(206,94,24,68);
+  x.fillStyle=rgba(COL.water,0.20);x.fillRect(196,52,44,42);
+  x.strokeStyle=COL.metal;x.lineWidth=3;x.beginPath();x.moveTo(196,52);x.lineTo(196,96);x.moveTo(240,52);x.lineTo(240,96);x.stroke();
+  x.strokeStyle=COL.ink;x.lineWidth=1.6;x.strokeRect(150,8,136,104);
+  // vortex loops
+  const loops=[[193,62,-1,vL],[243,62,1,vR]];
+  for(const [lx,ly,dir,arr] of loops){x.strokeStyle=rgba(COL.water,0.5);x.lineWidth=1;x.setLineDash([3,4]);x.beginPath();x.ellipse(lx,ly,20,34,0,0,7);x.stroke();x.setLineDash([]);
+    for(let i=0;i<arr.length;i++){arr[i]+=dir*vortexW*dt*0.5;const t=arr[i];x.fillStyle=COL.water;x.beginPath();x.arc(lx+20*Math.cos(t),ly+34*Math.sin(t),2.5,0,7);x.fill();}}
+  // net advance symbol
+  const ax=316,ay=60;x.strokeStyle=COL.ink;x.lineWidth=1.5;x.beginPath();x.arc(ax,ay,12,0,7);x.stroke();
+  x.fillStyle=COL.water;x.beginPath();x.arc(ax,ay,1.5+6*Math.min(1,q),0,7);x.fill();
+  x.font=FONT;x.fillStyle=COL.ink;x.textAlign='left';x.textBaseline='middle';
+  x.fillText('Avance neto',334,52);x.fillText('hacia la salida',334,68);
+  x.fillText('Canal',292,22);x.fillText('Celda entre',296,98);x.fillText('álabes',296,113);
+  x.strokeStyle=COL.muted;x.lineWidth=1;x.beginPath();x.moveTo(292,104);x.lineTo(242,80);x.stroke();
+  x.fillStyle=COL.muted;x.fillText('Disco',240,140);
+  x.fillStyle=COL.muted;x.fillText('Vórtice:',10,40);x.fillText(`${NF(vortexW/(2*Math.PI),2)} vueltas/s`,10,56);x.fillText('(escala reducida)',10,72);
+  x.strokeStyle=COL.muted;x.lineWidth=1;x.beginPath();x.moveTo(62,40);x.lineTo(172,56);x.stroke();x.fillStyle=COL.muted;x.beginPath();x.arc(172,56,2.2,0,7);x.fill();
+}
+
+/* ---------- Medidores y gráfico ---------- */
+function meters(k,s){const m=MODEL[k].max,base=OPEN[k];const pc=v=>Math.max(0,Math.min(100,v*100))+'%';
+  $(k+'-q').innerHTML=`${NF(s.Q,1)} <small>L/min</small>`;$(k+'b-q').style.width=pc(s.Q/m.q);
+  $(k+'-h').innerHTML=`${NF(s.H,1)} <small>m</small>`;$(k+'b-h').style.width=pc(s.H/m.h);
+  $(k+'-b').innerHTML=`${NF(s.b,0)} <small>W</small>`;$(k+'b-b').style.width=pc(s.b/m.b);
+  $(k+'-t').innerHTML=`${NF(s.T,2)} <small>N·m</small>`;$(k+'b-t').style.width=pc(s.T/m.t);
+  const d=(s.I/base.I-1)*100;$(k+'-i').innerHTML=`${NF(s.I,2)} <small>A</small> <span class="delta">${d>=0?'+':'−'}${NF(Math.abs(d),0)} %</span>`;$(k+'b-i').style.width=pc(s.I/m.i);}
+const CH={W:600,H:300,ml:52,mr:16,mt:14,mb:44};CH.pw=CH.W-CH.ml-CH.mr;CH.ph=CH.H-CH.mt-CH.mb;
+const XA=v=>CH.ml+CH.pw*(1-v/100),YA=v=>CH.mt+CH.ph*(1-(v-40)/(140-40));
+function buildChart(){let g='';
+  for(let v=0;v<=100;v+=20){const x=XA(v).toFixed(1);g+=`<line class="grid" x1="${x}" x2="${x}" y1="${CH.mt}" y2="${CH.mt+CH.ph}"/><text class="tick" x="${x}" y="${CH.mt+CH.ph+17}" text-anchor="middle">${v}</text>`;}
+  for(let v=40;v<=140;v+=20){const y=YA(v).toFixed(1);g+=`<line class="grid" x1="${CH.ml}" x2="${CH.ml+CH.pw}" y1="${y}" y2="${y}"/><text class="tick" x="${CH.ml-8}" y="${(+y+4).toFixed(1)}" text-anchor="end">${v}</text>`;}
+  g+=`<line class="ref" x1="${CH.ml}" x2="${CH.ml+CH.pw}" y1="${YA(100)}" y2="${YA(100)}"/>`;
+  g+=`<line class="axis" x1="${CH.ml}" x2="${CH.ml+CH.pw}" y1="${CH.mt+CH.ph}" y2="${CH.mt+CH.ph}"/><line class="axis" x1="${CH.ml}" x2="${CH.ml}" y1="${CH.mt}" y2="${CH.mt+CH.ph}"/>`;
+  g+=`<text class="axl" x="${CH.ml+CH.pw/2}" y="${CH.H-6}" text-anchor="middle">Apertura de la válvula (%) → se cierra hacia la derecha</text>`;
+  g+=`<text class="axl" transform="translate(15 ${CH.mt+CH.ph/2}) rotate(-90)" text-anchor="middle">Relativo a válvula abierta (%)</text>`;
+  const line=(k,f,cls)=>{let d='';for(let i=0;i<=100;i++){const s=op(k,i/100);const v=100*f(s)/f(OPEN[k]);d+=(i?'L':'M')+XA(i).toFixed(1)+' '+YA(v).toFixed(1);}return`<path class="${cls}" d="${d}"/>`;};
+  g+=line('c',s=>s.b,'l-cb')+line('p',s=>s.b,'l-pb')+line('c',s=>s.I,'l-c')+line('p',s=>s.I,'l-p');
+  g+=`<circle id="dc" class="d-c" r="6"/><circle id="dp" class="d-p" r="6"/>`;
+  $('chart').innerHTML=g;}
+buildChart();
+const XE=v=>CH.ml+CH.pw*v/100,YE=v=>CH.mt+CH.ph*(1-v/60);
+function etaQ(k,Q){const m=MODEL[k];if(Q<=0)return 0;return RHOG*Q/60000*Math.max(0,m.H0(Q))/m.B0(Q);}
+function buildEff(){let g='';
+  for(let v=0;v<=100;v+=20){const x=XE(v).toFixed(1);g+=`<line class="grid" x1="${x}" x2="${x}" y1="${CH.mt}" y2="${CH.mt+CH.ph}"/><text class="tick" x="${x}" y="${CH.mt+CH.ph+17}" text-anchor="middle">${v}</text>`;}
+  for(let v=0;v<=60;v+=10){const y=YE(v).toFixed(1);g+=`<line class="grid" x1="${CH.ml}" x2="${CH.ml+CH.pw}" y1="${y}" y2="${y}"/><text class="tick" x="${CH.ml-8}" y="${(+y+4).toFixed(1)}" text-anchor="end">${v}</text>`;}
+  g+=`<line class="axis" x1="${CH.ml}" x2="${CH.ml+CH.pw}" y1="${CH.mt+CH.ph}" y2="${CH.mt+CH.ph}"/><line class="axis" x1="${CH.ml}" x2="${CH.ml}" y1="${CH.mt}" y2="${CH.mt+CH.ph}"/>`;
+  g+=`<text class="axl" x="${CH.ml+CH.pw/2}" y="${CH.H-6}" text-anchor="middle">Caudal relativo al de válvula abierta (%)</text>`;
+  g+=`<text class="axl" transform="translate(15 ${CH.mt+CH.ph/2}) rotate(-90)" text-anchor="middle">Eficiencia de la bomba, η (%)</text>`;
+  for(const [k,cls] of [['c','l-c'],['p','l-p']]){let d='';const Qo=OPEN[k].Q;for(let i=0;i<=100;i++){const Q=Qo*i/100;d+=(i?'L':'M')+XE(i).toFixed(1)+' '+YE(100*etaQ(k,Q)).toFixed(1);}g+=`<path class="${cls}" d="${d}"/>`;}
+  g+=`<circle id="dce" class="d-c" r="6"/><circle id="dpe" class="d-p" r="6"/>`;
+  $('chart-e').innerHTML=g;}
+buildEff();
+
+/* ---------- Bucle ---------- */
+let last=performance.now();
+function drawAll(dt){const sc=op('c',o),sp=op('p',o);
+  if(dt>0){stepC(dt,sc);stepP(dt,sp);}else{vortexW=5.2*(0.9+1.3*(1-Math.min(1,sp.Q/OPEN.p.Q)));}
+  drawC(sc);drawP(sp);drawIC(sc,dt);drawIP(sp,dt);meters('c',sc);meters('p',sp);
+  $('dc').setAttribute('cx',XA(o*100));$('dc').setAttribute('cy',YA(100*sc.I/OPEN.c.I));
+  $('dp').setAttribute('cx',XA(o*100));$('dp').setAttribute('cy',YA(100*sp.I/OPEN.p.I));
+  $('dce').setAttribute('cx',XE(100*sc.Q/OPEN.c.Q));$('dce').setAttribute('cy',YE(100*etaQ('c',sc.Q)));
+  $('dpe').setAttribute('cx',XE(100*sp.Q/OPEN.p.Q));$('dpe').setAttribute('cy',YE(100*etaQ('p',sp.Q)));
+  $('in-o').value=Math.round(o*100);$('out-o').textContent=Math.round(o*100)+' %';}
+function loop(now){let dt=Math.min(0.05,(now-last)/1000);last=now;
+  if(target!==null){const sp=1/6;const d=target-o;if(Math.abs(d)<=sp*dt){o=target;target=null;}else o+=Math.sign(d)*sp*dt;}
+  if(paused)dt=0;else phi+=1.4*dt;
+  drawAll(dt);requestAnimationFrame(loop);}
+
+for(let i=1;i<=4;i++)$('s'+i).addEventListener('click',()=>setStep(i));
+$('in-o').addEventListener('input',e=>{target=null;o=+e.target.value/100;});
+$('b-close').addEventListener('click',()=>{target=0;});
+for(const [id,v] of [['f-p','p'],['f-v','v'],['f-n','n']])$(id).addEventListener('click',()=>{field=v;updateBar();if(paused)drawAll(0);});
+$('b-open').addEventListener('click',()=>{target=1;});
+$('b-pause').addEventListener('click',()=>{paused=!paused;$('b-pause').setAttribute('aria-pressed',paused);$('b-pause').textContent=paused?'Reanudar':'Pausar';});
+if(paused){$('b-pause').setAttribute('aria-pressed','true');$('b-pause').textContent='Reanudar';}
+setStep(1);requestAnimationFrame(t=>{last=t;loop(t);});
+})();
+</script>
+
+</body></html>

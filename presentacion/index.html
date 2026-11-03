@@ -1,0 +1,1285 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bombas centrífugas: lectura y selección</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+html,body{margin:0;height:100%;background:#0b141c;overflow:hidden;font-family:'IBM Plex Sans',Arial,sans-serif}
+.stage{position:absolute;width:1920px;height:1080px;transform-origin:0 0}
+.stage>section{position:absolute;left:0;top:0;width:1920px;height:1080px;box-sizing:border-box;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s linear .35s}
+.stage>section.on{opacity:1;visibility:visible;transition:opacity .35s ease}
+.stage section *{margin:0;box-sizing:border-box}
+.stage section aside{display:none}
+.stage section table{border-collapse:collapse}
+.stage section th,.stage section td{padding:10px 24px;text-align:left}
+.stage section th{font-weight:600}
+.stage section a{color:inherit;text-decoration:underline;text-underline-offset:4px}
+.stage section img{display:block}
+.stage [data-build-in]{transition:opacity .4s ease}
+.stage [data-build-in].pending{opacity:0}
+.bar{position:fixed;right:16px;bottom:16px;display:flex;gap:8px;align-items:center;font-size:14px;color:#c9d3da;opacity:0;transition:opacity .3s}
+body.ui .bar{opacity:1}
+.bar button{font:inherit;color:#e8ece9;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 10px;cursor:pointer}
+.bar button:focus-visible{outline:2px solid #f0a46e;outline-offset:2px}
+.bar .n{font-variant-numeric:tabular-nums;padding:0 6px}
+.notes{position:fixed;left:16px;right:16px;bottom:64px;max-height:38vh;overflow:auto;background:rgba(17,28,36,.95);color:#e8ece9;border:1px solid #2a3a45;border-radius:12px;padding:16px 20px;font-size:17px;line-height:1.5}
+.notes h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#f0a46e;margin:0 0 8px}
+.notes p{margin:0;max-width:90ch}
+.help{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55)}
+.help div{background:#17232c;color:#e8ece9;border-radius:12px;padding:24px 28px;font-size:16px;line-height:1.7;max-width:92vw}
+.help kbd{font-family:'IBM Plex Mono',monospace;background:#24333d;border-radius:4px;padding:1px 6px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+<section id="cover" data-transition="fade" style="display:flex; flex-direction:column; justify-content:space-between; padding:128px; background:#13293d; font-family:'IBM Plex Sans', Arial, sans-serif">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#f0a46e">Escuela de Ingeniería Química · UCR</p>
+  <div style="display:flex; flex-direction:column; gap:40px">
+    <h1 style="width:1400px; font-family:'Source Serif 4', Georgia, serif; font-size:112px; font-weight:600; line-height:1.05; color:#f4f3ee">Bombas centrífugas</h1>
+    <p style="width:1300px; font-size:44px; line-height:1.3; color:#bcd0dc">Cómo leer las curvas del fabricante y seleccionar una bomba</p>
+  </div>
+  <p style="font-size:28px; color:#bcd0dc">IQ-0432 · Laboratorio de Ingeniería Química · II ciclo 2026</p>
+</section>
+<section id="reto" data-transition="fade" style="display:flex; flex-direction:column; gap:48px; justify-content:center; padding:128px 128px 160px; background:#a8501a; font-family:'IBM Plex Sans', Arial, sans-serif; color:#f4f3ee">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#ffd3b0">El reto de hoy</p>
+  <h1 style="width:1600px; font-family:'Source Serif 4', Georgia, serif; font-size:112px; font-weight:600; line-height:1.08; color:#f4f3ee">Hay que bombear<br><span style="color:#ffd3b0">16 m³/h</span> a <span style="color:#ffd3b0">19 m</span>.</h1>
+  <p style="width:1500px; font-family:'Source Serif 4', Georgia, serif; font-size:60px; font-weight:600; line-height:1.2; color:#f4f3ee">Dos bombas del catálogo sirven. ¿Cuál compraría, y con qué motor?</p>
+  <p style="width:1400px; font-size:32px; line-height:1.4; color:#ffd3b0">Al final de la clase lo resolvemos con el catálogo DAB KDN.</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#ffd3b0">2</p>
+</section>
+<section id="agenda" data-transition="fade" style="display:flex; flex-direction:column; gap:40px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Temas principales</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">De las curvas a la selección</h2>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px">
+    <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+      <p style="font-family:'Source Serif 4', Georgia, serif; font-size:56px; font-weight:700; line-height:1; color:#1f6b94">1</p>
+      <h3 style="font-size:32px; font-weight:600; line-height:1.2; color:#13293d">Temas adicionales</h3>
+      <p style="font-size:26px; line-height:1.35; color:#4a5866">Variaciones en impulsores y bombas centrífugas</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+      <p style="font-family:'Source Serif 4', Georgia, serif; font-size:56px; font-weight:700; line-height:1; color:#1f6b94">2</p>
+      <h3 style="font-size:32px; font-weight:600; line-height:1.2; color:#13293d">Repaso: curva característica</h3>
+      <p style="font-size:26px; line-height:1.35; color:#4a5866">Puntos de máxima eficiencia</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+      <p style="font-family:'Source Serif 4', Georgia, serif; font-size:56px; font-weight:700; line-height:1; color:#1f6b94">3</p>
+      <h3 style="font-size:32px; font-weight:600; line-height:1.2; color:#13293d">Repaso: curva del sistema</h3>
+      <p style="font-size:26px; line-height:1.35; color:#4a5866">Punto de operación</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#fbfaf6; border-top:6px solid #a8501a; border-radius:12px">
+      <p style="font-family:'Source Serif 4', Georgia, serif; font-size:56px; font-weight:700; line-height:1; color:#a8501a">4</p>
+      <h3 style="font-size:32px; font-weight:600; line-height:1.2; color:#13293d">Diagramas del fabricante</h3>
+      <p style="font-size:26px; line-height:1.35; color:#4a5866">Tipos de gráficos comunes y cómo leerlos</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#fbfaf6; border-top:6px solid #a8501a; border-radius:12px">
+      <p style="font-family:'Source Serif 4', Georgia, serif; font-size:56px; font-weight:700; line-height:1; color:#a8501a">5</p>
+      <h3 style="font-size:32px; font-weight:600; line-height:1.2; color:#13293d">Selección de una bomba</h3>
+      <p style="font-size:26px; line-height:1.35; color:#4a5866">Ejemplo guiado, en conjunto</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#13293d; border-top:6px solid #f0a46e; border-radius:12px">
+      <p style="font-family:'Source Serif 4', Georgia, serif; font-size:56px; font-weight:700; line-height:1; color:#f0a46e">6</p>
+      <h3 style="font-size:32px; font-weight:600; line-height:1.2; color:#f4f3ee">Trabajo en clase</h3>
+      <p style="font-size:26px; line-height:1.35; color:#bcd0dc">Caso de estudio en grupos</p>
+    </div>
+  </div>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">3</p>
+</section>
+<section id="sec-adicionales" data-transition="fade" style="display:flex; flex-direction:column; gap:40px; justify-content:center; padding:128px; background:#13293d; font-family:'IBM Plex Sans', Arial, sans-serif">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#f0a46e">Parte 1 de 6</p>
+  <h1 style="width:1500px; font-family:'Source Serif 4', Georgia, serif; font-size:112px; font-weight:600; line-height:1.05; color:#f4f3ee">¿Qué cambia de una centrífuga a otra?</h1>
+  <p style="width:1300px; font-size:40px; line-height:1.3; color:#bcd0dc">Tipo de impulsor, succión y número de etapas</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#8a9aa8">4</p>
+</section>
+<section id="impulsores" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Algunas variaciones · Impulsor</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">El cerrado es más eficiente; el abierto tolera sólidos</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:32px">
+    <div style="display:flex; flex-direction:column; gap:16px; flex:1">
+      <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; height:340px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/imp-abierto.png" alt="Impulsor abierto" style="width:500px; height:306px; object-fit:contain"></div>
+      <h3 style="font-size:36px; font-weight:600; color:#1f6b94">Abierto</h3>
+      <p style="font-size:26px; line-height:1.4; color:#4a5866">Álabes sin tapas laterales. Tolera sólidos en suspensión; menor eficiencia.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px; flex:1">
+      <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; height:340px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/imp-semiabierto.png" alt="Impulsor semiabierto" style="width:500px; height:306px; object-fit:contain"></div>
+      <h3 style="font-size:36px; font-weight:600; color:#1f6b94">Semiabierto</h3>
+      <p style="font-size:26px; line-height:1.4; color:#4a5866">Una sola tapa, en la cara posterior. Término medio entre ambos.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px; flex:1">
+      <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; height:340px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/imp-cerrado.png" alt="Impulsor cerrado" style="width:500px; height:306px; object-fit:contain"></div>
+      <h3 style="font-size:36px; font-weight:600; color:#1f6b94">Cerrado</h3>
+      <p style="font-size:26px; line-height:1.4; color:#4a5866">Álabes entre dos tapas. Mayor eficiencia; para líquidos limpios.</p>
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1400px; font-size:24px; color:#6b7884">Imágenes: Faraji et al. (2022), figura 1 (paneles a, b y d), vía ResearchGate.</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">5</p>
+</section>
+<section id="succion" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Algunas variaciones · Succión</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">La doble succión reparte el caudal entre dos entradas</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:48px">
+    <div style="display:flex; flex-direction:column; gap:16px; flex:1">
+      <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; height:380px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/succion-unica.jpg" alt="Bomba centrífuga de succión única, en corte" style="width:770px; height:346px; object-fit:contain"></div>
+      <h3 style="font-size:36px; font-weight:600; color:#1f6b94">Succión única</h3>
+      <p style="font-size:28px; line-height:1.4; color:#4a5866">El fluido entra por <b>una cara</b> del impulsor.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px; flex:1">
+      <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; height:380px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/succion-doble.jpg" alt="Bomba de doble succión de carcasa partida, en corte" style="width:770px; height:346px; object-fit:contain"></div>
+      <h3 style="font-size:36px; font-weight:600; color:#1f6b94">Succión doble</h3>
+      <p style="font-size:28px; line-height:1.4; color:#4a5866">El fluido entra por <b>ambas caras</b> del impulsor.</p>
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1400px; font-size:24px; color:#6b7884">Imágenes: Seguas (bomba radial de succión única) y Neptuno Pumps (bomba de doble succión, carcasa partida).</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">6</p>
+</section>
+<section id="etapas" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Algunas variaciones · Etapas</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Una multietapa son bombas en serie en una sola carcasa</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px">
+    <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; flex:3; height:520px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/multietapa.jpg" alt="Bomba multietapa de carcasa partida, en corte" style="width:940px; height:486px; object-fit:contain"></div>
+    <div style="display:flex; flex-direction:column; gap:24px; flex:2">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:36px; font-weight:600; color:#1f6b94">Etapa única</h3>
+        <p style="font-size:28px; line-height:1.4; color:#4a5866">Un impulsor entrega toda la cabeza.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#fbfaf6; border-top:6px solid #a8501a; border-radius:12px">
+        <h3 style="font-size:36px; font-weight:600; color:#a8501a">Multietapa</h3>
+        <p style="font-size:28px; line-height:1.4; color:#4a5866">Varios impulsores en serie sobre el mismo eje: <b>el caudal es el mismo y las cabezas se suman.</b></p>
+      </div>
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1400px; font-size:24px; color:#6b7884">Imagen: Neptuno Pumps, esquema de bomba multietapa de carcasa partida.</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">7</p>
+</section>
+<section id="sec-curva" data-transition="fade" style="display:flex; flex-direction:column; gap:40px; justify-content:center; padding:128px; background:#13293d; font-family:'IBM Plex Sans', Arial, sans-serif">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#f0a46e">Parte 2 de 6 · Repaso</p>
+  <h1 style="width:1500px; font-family:'Source Serif 4', Georgia, serif; font-size:112px; font-weight:600; line-height:1.05; color:#f4f3ee">¿Dónde le conviene trabajar a una bomba?</h1>
+  <p style="width:1300px; font-size:40px; line-height:1.3; color:#bcd0dc">Repaso: curva característica y punto de máxima eficiencia</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#8a9aa8">8</p>
+</section>
+<section id="curva-ejes" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Curva característica</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">La cabeza, la eficiencia y la potencia comparten el eje del caudal</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px">
+    <div style="display:flex; flex-direction:column; gap:16px; width:650px; flex:none">
+      <div style="display:flex; flex-direction:column; gap:8px; padding:24px 28px; background:#fbfaf6; border-left:6px solid #1f6b94; border-radius:12px">
+        <p style="font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#1f6b94">Eje x</p>
+        <p style="font-size:32px; line-height:1.35; color:#13293d">Caudal o capacidad, <i>Q</i></p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; padding:24px 28px; background:#fbfaf6; border-left:6px solid #a8501a; border-radius:12px">
+        <p style="font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#a8501a">Eje y</p>
+        <p style="font-size:32px; line-height:1.35; color:#13293d">Cabeza total, <i>H</i></p>
+        <p style="font-size:32px; line-height:1.35; color:#13293d">Eficiencia, <i>η</i></p>
+        <p style="font-size:32px; line-height:1.35; color:#13293d">Potencia al freno, <i>bhp</i></p>
+      </div>
+      <p style="font-size:26px; line-height:1.4; color:#1f6b94"><a href="../interactivos/banco-curva.html" target="_blank" rel="noopener">Abrir el banco interactivo ↗</a></p>
+      <p style="font-size:24px; line-height:1.4; color:#4a5866">La bomba es una centrífuga ficticia. Las del módulo son periféricas: su potencia baja al aumentar el caudal.</p>
+    </div>
+  </div>
+  <iframe class="emb" title="Animación" sandbox="allow-scripts" style="position:absolute; left:818px; top:382px; width:974px; height:500px; border:0" data-doc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;html,body{margin:0;height:100%;background:#fbfaf6;overflow:hidden;border-radius:12px}canvas{display:block;width:100%;height:100%}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;canvas id=&quot;c&quot;&gt;&lt;/canvas&gt;&lt;script&gt;
+(function(){
+var W=974,H=500,cv=document.getElementById(&#x27;c&#x27;),cx=cv.getContext(&#x27;2d&#x27;),k=1;
+var F=&#x27;&quot;IBM Plex Sans&quot;,&quot;Segoe UI&quot;,Arial,sans-serif&#x27;,M=&#x27;&quot;IBM Plex Mono&quot;,Consolas,&quot;Courier New&quot;,monospace&#x27;;
+var INK=&#x27;#13293d&#x27;,MU=&#x27;#4a5866&#x27;,LN=&#x27;#dfe2dd&#x27;,SUNK=&#x27;#eceeea&#x27;,AC=&#x27;#1f6b94&#x27;,C=[&#x27;#2a78d6&#x27;,&#x27;#eb6834&#x27;,&#x27;#1baf7a&#x27;];
+function size(){var d=window.devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;k=Math.min(innerWidth/W,innerHeight/H);cx.setTransform(k*d,0,0,k*d,0,0);}
+size();addEventListener(&#x27;resize&#x27;,size);
+var RG=998*9.81;
+function Hq(q){return 23-0.004*q-0.0135*q*q}function Bq(q){return 0.62+0.047*q}function Eq(q){return RG*(q/3600)*Hq(q)/1000/Bq(q)}
+var Q=[32.2,28.1,24.0,20.1,16.0,12.1,8.0,4.1,0],S=[90,54,44,37,32,27,21,15,0],J=[[.15,-.01,.6],[-.2,.02,-.5],[.1,-.015,.4],[-.12,.01,-.3],[.08,.012,.5],[.14,-.01,-.6],[-.1,.008,.3],[.06,-.006,-.4],[.05,.004,0]];
+var P=Q.map(function(q,i){return{q:q,s:S[i],h:Hq(q)+J[i][0],b:Bq(q)+J[i][1],e:Math.max(0,Eq(q)*100+J[i][2])}});
+var X0=360,X1=946,QM=35,PT=[{t:&#x27;Cabeza total H (m)&#x27;,hi:25,tk:[0,10,20],f:Hq,v:&#x27;h&#x27;,c:C[0]},{t:&#x27;Potencia al freno bhp (kW)&#x27;,hi:2.5,tk:[0,1,2],f:Bq,v:&#x27;b&#x27;,c:C[1]},{t:&#x27;Eficiencia η (%)&#x27;,hi:70,tk:[0,30,60],f:function(q){return Eq(q)*100},v:&#x27;e&#x27;,c:C[2]}];
+var TOP=34,PH=104,GAP=40;
+function sx(q){return X0+(X1-X0)*q/QM}
+function sy(i,v){var p=PT[i],t=TOP+i*(PH+GAP);return t+PH-Math.max(0,Math.min(1,v/p.hi))*PH}
+function txt(s,x,y,sz,col,al,font,w){cx.font=(w||400)+&#x27; &#x27;+sz+&#x27;px &#x27;+(font||F);cx.fillStyle=col;cx.textAlign=al||&#x27;left&#x27;;cx.fillText(s,x,y)}
+function n(x,d){return x.toFixed(d).replace(&#x27;.&#x27;,&#x27;,&#x27;)}
+var T0=performance.now(),STEP=1400,NPT=P.length,TFIT=NPT*STEP+300,TF=1800,THOLD=4200,CYC=TFIT+TF+THOLD;
+var red=matchMedia(&#x27;(prefers-reduced-motion: reduce)&#x27;).matches;
+function frame(now){
+ var t=red?CYC-500:Math.max(0,now-T0)%CYC;
+ var shown=Math.min(NPT,Math.floor(t/STEP)+1),cur=Math.min(NPT-1,Math.floor(t/STEP)),pop=Math.min(1,(t-cur*STEP)/300);
+ var fit=t&lt;TFIT?0:Math.min(1,(t-TFIT)/TF);
+ cx.clearRect(0,0,W,H);cx.fillStyle=&#x27;#fbfaf6&#x27;;cx.fillRect(0,0,W,H);
+ // panel izquierdo
+ cx.fillStyle=SUNK;rr(24,24,296,452,10);cx.fill();
+ txt(&#x27;Válvula de descarga&#x27;,44,64,24,INK,&#x27;left&#x27;,F,600);
+ var s=P[cur].s/100;cx.fillStyle=&#x27;#fbfaf6&#x27;;rr(44,82,256,26,6);cx.fill();cx.fillStyle=AC;rr(44,82,Math.max(0.001,256*s),26,6);cx.fill();
+ txt(&#x27;Apertura &#x27;+P[cur].s+&#x27; %&#x27;,44,140,24,MU);
+ var p=P[cur],rows=[[&#x27;Q&#x27;,n(p.q,1)+&#x27; m³/h&#x27;],[&#x27;H&#x27;,n(p.h,1)+&#x27; m&#x27;],[&#x27;bhp&#x27;,n(p.b,2)+&#x27; kW&#x27;],[&#x27;η&#x27;,n(p.e,0)+&#x27; %&#x27;]];
+ rows.forEach(function(r,i){var y=196+i*58;txt(r[0],44,y,24,MU);txt(r[1],300,y,28,INK,&#x27;right&#x27;,M,600)});
+ txt(&#x27;Punto &#x27;+shown+&#x27; de &#x27;+NPT,44,446,24,MU);
+ // paneles
+ PT.forEach(function(pp,i){var top=TOP+i*(PH+GAP);
+  txt(pp.t,X0,top-10,22,INK,&#x27;left&#x27;,F,600);
+  pp.tk.forEach(function(v){var y=sy(i,v);cx.strokeStyle=LN;cx.lineWidth=1;cx.beginPath();cx.moveTo(X0,y);cx.lineTo(X1,y);cx.stroke();txt(String(v),X0-10,y+7,20,MU,&#x27;right&#x27;)});
+  if(fit&gt;0){cx.strokeStyle=pp.c;cx.lineWidth=3;cx.lineCap=&#x27;round&#x27;;cx.beginPath();var qe=32.2*fit;for(var q=0;q&lt;=qe;q+=0.4){var y=sy(i,pp.f(q));q?cx.lineTo(sx(q),y):cx.moveTo(sx(q),y)}cx.stroke()}
+  for(var j=0;j&lt;shown;j++){var r=(j===cur&amp;&amp;fit===0)?6+3*(1-pop)+1:6;cx.beginPath();cx.arc(sx(P[j].q),sy(i,P[j][pp.v]),r+2,0,7);cx.fillStyle=&#x27;#fbfaf6&#x27;;cx.fill();cx.beginPath();cx.arc(sx(P[j].q),sy(i,P[j][pp.v]),r,0,7);cx.fillStyle=pp.c;cx.fill()}
+ });
+ // eje x compartido
+ var yb=TOP+3*PH+2*GAP;for(var q=0;q&lt;=QM;q+=5)txt(String(q),sx(q),yb+28,20,MU,&#x27;center&#x27;);
+ txt(&#x27;Caudal Q (m³/h) · mismo eje para las tres curvas&#x27;,(X0+X1)/2,yb+58,22,INK,&#x27;center&#x27;);
+ // guía vertical del punto actual o BEP
+ var xg=fit&gt;=1?sx(17.3):sx(P[cur].q);cx.save();cx.setLineDash([6,6]);cx.strokeStyle=fit&gt;=1?MU:INK;cx.globalAlpha=fit&gt;=1?0.9:0.35;cx.lineWidth=1.5;cx.beginPath();cx.moveTo(xg,TOP-4);cx.lineTo(xg,yb);cx.stroke();cx.restore();
+ if(fit&gt;=1)txt(&#x27;BEP ≈ 17 m³/h&#x27;,xg+10,TOP+2*(PH+GAP)+PH-12,22,INK,&#x27;left&#x27;,F,600);
+ if(!red)requestAnimationFrame(frame);
+}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+requestAnimationFrame(frame);if(red)frame(0);
+})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">9</p>
+</section>
+<section id="max-eficiencia" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Curva característica</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Conviene operar cerca del BEP</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; justify-content:end">
+    <div style="display:flex; flex-direction:column; gap:20px; width:650px; flex:none">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:36px; font-weight:600; color:#1f6b94">BEP</h3>
+        <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:28px; line-height:1.4; color:#4a5866">Cada diámetro de impulsor tiene su BEP; al unirlos se obtiene la línea de mejor eficiencia.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#13293d; border-radius:12px">
+        <h3 style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:32px; font-weight:600; color:#f0a46e">En la práctica</h3>
+        <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:28px; line-height:1.4; color:#f4f3ee">Operar entre 70 % y 120 % del caudal del BEP: la región preferente.</p>
+      </div>
+      <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:26px; line-height:1.4; color:#1f6b94"><a href="../interactivos/mapa-bep.html" target="_blank" rel="noopener">Abrir el mapa interactivo ↗</a></p>
+    </div>
+  </div>
+  <iframe class="emb" title="Animación" sandbox="allow-scripts" style="position:absolute; top:302px; left:128px; width:974px; height:580px; border:0" data-doc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;html,body{margin:0;height:100%;background:#fbfaf6;overflow:hidden;border-radius:12px}canvas{display:block;width:100%;height:100%}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;canvas id=&quot;c&quot;&gt;&lt;/canvas&gt;&lt;script&gt;
+(function(){
+var W=974,H=580,cv=document.getElementById(&#x27;c&#x27;),cx=cv.getContext(&#x27;2d&#x27;);
+var F=&#x27;&quot;IBM Plex Sans&quot;,&quot;Segoe UI&quot;,Arial,sans-serif&#x27;,MO=&#x27;&quot;IBM Plex Mono&quot;,Consolas,&quot;Courier New&quot;,monospace&#x27;;
+var INK=&#x27;#13293d&#x27;,MU=&#x27;#4a5866&#x27;,LN=&#x27;#dfe2dd&#x27;,SUNK=&#x27;#eceeea&#x27;,CUR=&#x27;#5d6b76&#x27;,S1=&#x27;#2a78d6&#x27;,S2=&#x27;#eb6834&#x27;,S3=&#x27;#1baf7a&#x27;,GOOD=&#x27;#0ca30c&#x27;,WARN=&#x27;#fab219&#x27;,BAND=&#x27;rgba(31,107,148,0.14)&#x27;;
+function size(){var d=window.devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;var k=Math.min(innerWidth/W,innerHeight/H);cx.setTransform(k*d,0,0,k*d,0,0)}
+size();addEventListener(&#x27;resize&#x27;,size);
+var RG=998*9.81,DS=[115,125,135,142];
+function Hb(q){return 23-0.004*q-0.0135*q*q}
+function Eb(q){return q&lt;=0?0:RG*(q/3600)*Hb(q)/1000/(0.62+0.047*q)}
+function tr(D){return 1+0.3*(D-125)/142}function r(D){return D/125}
+function HD(D,Q){return r(D)*r(D)*Hb(Q/r(D))}function ED(D,Q){return Eb(Q/r(D))*tr(D)}
+var QB=0,best=0;for(var q=0;q&lt;=33;q+=0.01){var e=Eb(q);if(e&gt;best){best=e;QB=q}}
+function qb(D){return QB*r(D)}function qe(D){return 33*r(D)}
+function bis(f,a,b){var fa=f(a);for(var i=0;i&lt;40;i++){var m=(a+b)/2,fm=f(m);if((fm&gt;0)===(fa&gt;0)){a=m;fa=fm}else b=m}return(a+b)/2}
+var LV=[0.50,0.55,0.58,0.60,0.62],ISO=LV.map(function(L){var l=[],rr=[],d0=null;for(var d=115;d&lt;=142.01;d+=1){if(best*tr(d)&lt;L)continue;if(d0===null)d0=d;var f=function(x){return Eb(x)*tr(d)-L};var xl=bis(f,0.01,QB),xr=bis(f,QB,33),R=r(d);l.push([xl*R,R*R*Hb(xl)]);rr.push([xr*R,R*R*Hb(xr)])}var open=d0===115;return{L:L,lines:open?[l,rr]:[l.slice().reverse().concat(rr)],end:rr[rr.length-1]}});
+var X0=72,X1=620,Y0=34,Y1=488;
+function mx(q){return X0+(X1-X0)*q/40}function my(h){return Y1-(Y1-Y0)*h/32}
+function t(s,x,y,sz,c,al,w,f){cx.font=(w||400)+&#x27; &#x27;+sz+&#x27;px &#x27;+(f||F);cx.fillStyle=c;cx.textAlign=al||&#x27;left&#x27;;cx.fillText(s,x,y)}
+function n(x,d){return x.toFixed(d).replace(&#x27;.&#x27;,&#x27;,&#x27;)}
+function rr(x,y,w,h,rad){cx.beginPath();cx.moveTo(x+rad,y);cx.arcTo(x+w,y,x+w,y+h,rad);cx.arcTo(x+w,y+h,x,y+h,rad);cx.arcTo(x,y+h,x,y,rad);cx.arcTo(x,y,x+w,y,rad);cx.closePath()}
+function wrap(s,x,y,maxw,sz,c,lh,w){cx.font=(w||400)+&#x27; &#x27;+sz+&#x27;px &#x27;+F;var words=s.split(&#x27; &#x27;),line=&#x27;&#x27;,yy=y;words.forEach(function(wd){var test=line?line+&#x27; &#x27;+wd:wd;if(cx.measureText(test).width&gt;maxw&amp;&amp;line){t(line,x,yy,sz,c,&#x27;left&#x27;,w);line=wd;yy+=lh}else line=test});if(line)t(line,x,yy,sz,c,&#x27;left&#x27;,w);return yy}
+function curve(D,frac,col,lw){cx.strokeStyle=col;cx.lineWidth=lw;cx.beginPath();var end=qe(D)*frac;for(var q=0;q&lt;=end;q+=0.3){var y=my(HD(D,q));q?cx.lineTo(mx(q),y):cx.moveTo(mx(q),y)}cx.stroke()}
+var CYC=19500,T0=performance.now(),red=matchMedia(&#x27;(prefers-reduced-motion: reduce)&#x27;).matches,DSEL=125;
+function ease(x){return x&lt;0?0:x&gt;1?1:x*x*(3-2*x)}
+function frame(now){
+ var tm=red?17000:Math.max(0,now-T0)%CYC;
+ cx.fillStyle=&#x27;#fbfaf6&#x27;;cx.fillRect(0,0,W,H);
+ // ejes
+ for(var h=0;h&lt;=30;h+=10){var y=my(h);cx.strokeStyle=LN;cx.lineWidth=1;cx.beginPath();cx.moveTo(X0,y);cx.lineTo(X1,y);cx.stroke();t(String(h),X0-10,y+8,22,MU,&#x27;right&#x27;)}
+ for(var q=0;q&lt;=40;q+=10)t(String(q),mx(q),Y1+30,22,MU,&#x27;center&#x27;);
+ t(&#x27;Caudal Q (m³/h)&#x27;,(X0+X1)/2,Y1+62,22,INK,&#x27;center&#x27;);t(&#x27;H (m)&#x27;,X0-10,Y0-10,22,INK,&#x27;right&#x27;,600);
+ var sweep=tm&gt;=6000;
+ // región preferente
+ if(sweep){cx.strokeStyle=BAND;cx.lineWidth=18;cx.lineCap=&#x27;round&#x27;;cx.beginPath();for(var q=0.7*qb(DSEL);q&lt;=1.2*qb(DSEL);q+=0.3){var y=my(HD(DSEL,q));q&gt;0.7*qb(DSEL)?cx.lineTo(mx(q),y):cx.moveTo(mx(q),y)}cx.stroke();cx.lineCap=&#x27;butt&#x27;}
+ // isoeficiencia
+ var ia=ease((tm-2400)/1600);
+ if(ia&gt;0){cx.save();cx.globalAlpha=ia;cx.setLineDash([7,5]);cx.strokeStyle=S3;cx.lineWidth=2;ISO.forEach(function(o){o.lines.forEach(function(pl){cx.beginPath();pl.forEach(function(p,i){i?cx.lineTo(mx(p[0]),my(p[1])):cx.moveTo(mx(p[0]),my(p[1]))});cx.stroke()})});cx.setLineDash([]);
+  ISO.forEach(function(o,i){var p=o.end;if(i%2===0||i===ISO.length-1)t(n(o.L*100,0)+&#x27; %&#x27;,mx(p[0])+6,my(p[1])-4,20,INK,&#x27;left&#x27;,600)});cx.restore()}
+ // curvas
+ DS.forEach(function(D,i){var f=ease((tm-i*600)/600);if(f&lt;=0)return;var on=sweep&amp;&amp;D===DSEL;curve(D,f,on?S1:CUR,on?4:2.5);if(f&gt;=1)t(&#x27;Ø&#x27;+D,mx(1),my(HD(D,1))-9,22,INK,&#x27;left&#x27;,on?700:500)});
+ // BEP y línea
+ var ba=ease((tm-4400)/1200);
+ if(ba&gt;0){cx.save();cx.globalAlpha=ba;cx.strokeStyle=S2;cx.lineWidth=3;cx.beginPath();for(var d=112;d&lt;=146;d++){var x=mx(qb(d)),y=my(HD(d,qb(d)));d&gt;112?cx.lineTo(x,y):cx.moveTo(x,y)}cx.stroke();
+  DS.forEach(function(D){var x=mx(qb(D)),y=my(HD(D,qb(D)));cx.beginPath();cx.moveTo(x,y-10);cx.lineTo(x+10,y);cx.lineTo(x,y+10);cx.lineTo(x-10,y);cx.closePath();cx.fillStyle=S2;cx.fill();cx.strokeStyle=&#x27;#fbfaf6&#x27;;cx.lineWidth=2.5;cx.stroke()});
+  var x=mx(qb(146)),y=my(HD(146,qb(146)));t(&#x27;BEP&#x27;,x+10,y-2,22,INK,&#x27;left&#x27;,600);cx.restore()}
+ // panel derecho
+ var PX=652,PW=298;cx.fillStyle=SUNK;rr(PX,24,PW,532,12);cx.fill();
+ if(!sweep){t(&#x27;Cómo se lee&#x27;,PX+20,66,24,INK,&#x27;left&#x27;,600);
+  var steps=[[&#x27;1&#x27;,&#x27;Una curva H–Q por&#x27;,&#x27;diámetro de&#x27;,&#x27;impulsor&#x27;,0],[&#x27;2&#x27;,&#x27;Líneas de&#x27;,&#x27;isoeficiencia&#x27;,&#x27;&#x27;,2400],[&#x27;3&#x27;,&#x27;BEP de cada curva&#x27;,&#x27;y línea de mejor&#x27;,&#x27;eficiencia&#x27;,4400]];
+  steps.forEach(function(s,i){var on=tm&gt;=s[4],y=126+i*136;cx.globalAlpha=on?1:0.35;cx.beginPath();cx.arc(PX+38,y-8,18,0,7);cx.fillStyle=i===2?S2:i===1?S3:CUR;cx.fill();t(s[0],PX+38,y,22,&#x27;#fbfaf6&#x27;,&#x27;center&#x27;,700);t(s[1],PX+68,y-6,22,INK);t(s[2],PX+68,y+22,22,INK);t(s[3],PX+68,y+50,22,INK);cx.globalAlpha=1});
+ } else {
+  var u=(tm-6000)/9000,Q;if(u&lt;=1)Q=2+(30-2)*ease(u);else{var v=ease((tm-15000)/1500);Q=30+(qb(DSEL)-30)*v}
+  var x=mx(Q),y=my(HD(DSEL,Q));cx.save();cx.setLineDash([4,5]);cx.strokeStyle=INK;cx.globalAlpha=0.5;cx.lineWidth=1.5;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x,Y1);cx.stroke();cx.restore();
+  cx.beginPath();cx.arc(x,y,11,0,7);cx.fillStyle=&#x27;#fbfaf6&#x27;;cx.fill();cx.beginPath();cx.arc(x,y,8,0,7);cx.fillStyle=S1;cx.fill();
+  var ratio=Q/qb(DSEL),z=ratio&lt;0.7?&#x27;L&#x27;:ratio&lt;=1.2?&#x27;P&#x27;:&#x27;R&#x27;;
+  t(&#x27;Ø125 mm&#x27;,PX+20,66,24,INK,&#x27;left&#x27;,600);
+  var rows=[[&#x27;Q&#x27;,n(Q,1)+&#x27; m³/h&#x27;],[&#x27;Respecto al BEP&#x27;,n(ratio*100,0)+&#x27; %&#x27;],[&#x27;η&#x27;,n(ED(DSEL,Q)*100,0)+&#x27; %&#x27;]];
+  rows.forEach(function(rw,i){var yy=112+i*46;t(rw[0],PX+20,yy,22,MU);t(rw[1],PX+PW-20,yy,24,INK,&#x27;right&#x27;,600,MO)});
+  var zy=262;cx.fillStyle=&#x27;#fbfaf6&#x27;;rr(PX+14,zy-4,PW-28,284,10);cx.fill();cx.fillStyle=z===&#x27;P&#x27;?GOOD:WARN;cx.fillRect(PX+14,zy-4,7,284);
+  cx.beginPath();cx.arc(PX+48,zy+26,16,0,7);cx.fill();t(z===&#x27;P&#x27;?&#x27;✓&#x27;:&#x27;!&#x27;,PX+48,zy+34,22,z===&#x27;P&#x27;?&#x27;#fbfaf6&#x27;:INK,&#x27;center&#x27;,700);
+  var title=z===&#x27;P&#x27;?&#x27;Región preferente&#x27;:z===&#x27;L&#x27;?&#x27;Izquierda del BEP&#x27;:&#x27;Derecha del BEP&#x27;;
+  t(title,PX+74,zy+34,24,INK,&#x27;left&#x27;,600);
+  var sub=z===&#x27;P&#x27;?&#x27;70 % a 120 % del BEP&#x27;:z===&#x27;L&#x27;?&#x27;Menos de 70 % del BEP&#x27;:&#x27;Más de 120 % del BEP&#x27;;
+  t(sub,PX+30,zy+74,20,MU);
+  var desc=z===&#x27;P&#x27;?&#x27;Eficiencia cerca del máximo y empuje radial mínimo.&#x27;:z===&#x27;L&#x27;?&#x27;Recirculación, empuje radial alto y calentamiento cerca del cierre.&#x27;:&#x27;El NPSH requerido sube rápido: riesgo de cavitación. Más carga en el motor.&#x27;;
+  wrap(desc,PX+30,zy+114,PW-60,22,INK,32);
+ }
+ if(!red)requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);if(red)frame(0);
+})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-family:'IBM Plex Sans', Arial, sans-serif; font-size:24px; text-align:right; color:#6b7884">10</p>
+</section>
+<section id="sec-sistema" data-transition="fade" style="display:flex; flex-direction:column; gap:40px; justify-content:center; padding:128px; background:#13293d; font-family:'IBM Plex Sans', Arial, sans-serif">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#f0a46e">Parte 3 de 6 · Repaso</p>
+  <h1 style="width:1500px; font-family:'Source Serif 4', Georgia, serif; font-size:112px; font-weight:600; line-height:1.05; color:#f4f3ee">¿Dónde termina operando la bomba?</h1>
+  <p style="width:1300px; font-size:40px; line-height:1.3; color:#bcd0dc">Repaso: curva del sistema, válvula, serie y paralelo</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#8a9aa8">11</p>
+</section>
+<section id="curva-sistema" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Curva del sistema</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">La fricción del sistema crece con Q²</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px">
+    <div style="display:flex; flex-direction:column; gap:20px; flex:3">
+      <p style="padding:28px 32px; font-family:'Source Serif 4', Georgia, serif; font-size:56px; font-style:italic; line-height:1.2; text-align:center; color:#f4f3ee; background:#13293d; border-radius:12px">hₐ = (z₂ − z₁) + <span style="color:#f0a46e">K Q²</span></p>
+      <div style="display:flex; flex-direction:row; gap:20px">
+        <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:28px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+          <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Cabeza estática</h3>
+          <p style="font-size:26px; line-height:1.4; color:#4a5866">Relacionada con el cambio de altura del fluido</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:28px; background:#fbfaf6; border-top:6px solid #a8501a; border-radius:12px">
+          <h3 style="font-size:32px; font-weight:600; color:#a8501a">Cabeza por fricción</h3>
+          <p style="font-size:26px; line-height:1.4; color:#4a5866">Relacionada con las pérdidas mayores y menores</p>
+        </div>
+      </div>
+      <p style="padding:0 0 0 24px; font-size:26px; line-height:1.45; color:#13293d; border-left:6px solid #7d8b97">Toma en cuenta las pérdidas de carga desde el nivel de líquido en el reservorio de succión (1) hasta el nivel de líquido en el reservorio de entrega (2).</p>
+    </div>
+    <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; flex:2; height:560px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/curva-sistema.png" alt="Curva del sistema: h_a = z2 − z1 + KQ²" style="width:616px; height:526px; object-fit:contain"></div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: Gerhart, P., Gerhart, A. y Hochstein, J. (2016). <i>Munson, Fundamentals of Fluid Mechanics</i>.</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">12</p>
+</section>
+<section id="pregunta-valvula" data-transition="fade" style="display:flex; flex-direction:column; gap:44px; justify-content:center; padding:128px 128px 160px; background:#a8501a; font-family:'IBM Plex Sans', Arial, sans-serif; color:#f4f3ee">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#ffd3b0">Antes de la animación · recuerden su práctica</p>
+  <h1 style="width:1600px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.15; color:#f4f3ee">Al cerrar la válvula de descarga de la bomba periférica del módulo, ¿qué le pasó a la corriente del motor?</h1>
+  <p style="width:1600px; font-size:36px; line-height:1.35; color:#ffd3b0">Las bombas del módulo son periféricas, no centrífugas. Después veremos qué pasa en una centrífuga.</p>
+  <div style="display:flex; flex-direction:row; gap:32px"><div style="display:flex; flex-direction:row; gap:24px; align-items:center; flex:1; padding:32px 40px; background:#8f4314; border-radius:16px"><p style="width:64px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:700; line-height:1; color:#ffd3b0">A</p><p style="font-size:40px; font-weight:500; line-height:1.25; color:#f4f3ee">Subió</p></div><div style="display:flex; flex-direction:row; gap:24px; align-items:center; flex:1; padding:32px 40px; background:#8f4314; border-radius:16px"><p style="width:64px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:700; line-height:1; color:#ffd3b0">B</p><p style="font-size:40px; font-weight:500; line-height:1.25; color:#f4f3ee">Bajó</p></div><div style="display:flex; flex-direction:row; gap:24px; align-items:center; flex:1; padding:32px 40px; background:#8f4314; border-radius:16px"><p style="width:64px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:700; line-height:1; color:#ffd3b0">C</p><p style="font-size:40px; font-weight:500; line-height:1.25; color:#f4f3ee">No cambió</p></div></div>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#ffd3b0">13</p>
+</section>
+<section id="resistencia" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Punto de operación</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Cerrar la válvula baja la potencia de la centrífuga y sube la de la periférica</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; justify-content:end">
+    <div style="display:flex; flex-direction:column; gap:20px; width:650px; flex:none">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Intersección</h3>
+        <p style="font-size:26px; line-height:1.4; color:#4a5866">La bomba opera donde su curva corta la curva del sistema.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#13293d; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#f0a46e">Más resistencia</h3>
+        <p style="font-size:26px; line-height:1.4; color:#f4f3ee">Al cerrar la válvula, <i>K</i> sube: menor caudal y mayor cabeza. El bhp <b>baja</b> en la centrífuga y <b>sube</b> en la periférica.</p>
+      </div>
+      <p style="font-size:26px; line-height:1.4; color:#1f6b94"><a href="../interactivos/resistencia.html" target="_blank" rel="noopener">Abrir la versión interactiva ↗</a></p>
+    </div>
+  </div>
+  <iframe class="emb" title="Animación" sandbox="allow-scripts" style="position:absolute; left:128px; top:382px; width:974px; height:500px; border:0" data-doc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;html,body{margin:0;height:100%;background:#fbfaf6;overflow:hidden;border-radius:12px}canvas{display:block;width:100%;height:100%}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;canvas id=&quot;c&quot;&gt;&lt;/canvas&gt;&lt;script&gt;
+(function(){
+var W=974,H=500,cv=document.getElementById(&#x27;c&#x27;),cx=cv.getContext(&#x27;2d&#x27;);
+var F=&#x27;&quot;IBM Plex Sans&quot;,&quot;Segoe UI&quot;,Arial,sans-serif&#x27;,MO=&#x27;&quot;IBM Plex Mono&quot;,Consolas,&quot;Courier New&quot;,monospace&#x27;;
+var INK=&#x27;#13293d&#x27;,MU=&#x27;#4a5866&#x27;,LN=&#x27;#dfe2dd&#x27;,SUNK=&#x27;#eceeea&#x27;,FA=&#x27;#9aa6ae&#x27;,S1=&#x27;#2a78d6&#x27;,S2=&#x27;#eb6834&#x27;,AC=&#x27;#1f6b94&#x27;;
+function size(){var d=window.devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;var k=Math.min(innerWidth/W,innerHeight/H);cx.setTransform(k*d,0,0,k*d,0,0)}
+size();addEventListener(&#x27;resize&#x27;,size);
+var RG=998*9.81,V=110,IM=2.5,P0=60,KM=0.85;
+var M={c:{n:&#x27;Centrífuga&#x27;,H0:function(q){return 22-9.722e-4*q*q},B0:function(q){return 190+2.3125*q},Qm:150.4,Rp:6.8e-4,hs:2,qx:160,hx:25,qt:[0,40,80,120,160],ht:[0,10,20]},
+ p:{n:&#x27;Periférica&#x27;,H0:function(q){return 34-0.65*q-0.005*q*q},B0:function(q){return 330-2.86*q},Qm:40,Rp:0.01,hs:1,qx:45,hx:36,qt:[0,10,20,30,40],ht:[0,10,20,30]}};
+function Kof(m,o){return m.Rp*(1+1.5*(1/(o*o)-1))}
+function op(m,o){var Q=0;if(o&gt;0.005){var R=Kof(m,o),a=0,b=m.Qm;if(m.H0(0)&gt;m.hs){for(var i=0;i&lt;45;i++){var c=(a+b)/2;if(m.H0(c)-(m.hs+R*c*c)&gt;0)a=c;else b=c}Q=(a+b)/2}}
+ var Hh=Math.max(0,m.H0(Q)),bb=m.B0(Q),Pe=P0+bb/KM;return{Q:Q,H:Hh,b:bb,I:Math.sqrt(Pe/V*Pe/V+IM*IM)}}
+function t(s,x,y,sz,c,al,w,f){cx.font=(w||400)+&#x27; &#x27;+sz+&#x27;px &#x27;+(f||F);cx.fillStyle=c;cx.textAlign=al||&#x27;left&#x27;;cx.fillText(s,x,y)}
+function n(x,d){return x.toFixed(d).replace(&#x27;.&#x27;,&#x27;,&#x27;)}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function ease(x){return x&lt;0?0:x&gt;1?1:x*x*(3-2*x)}
+var X0=78,X1=580,Y0=40,Y1=400,PH=9000,CYC=2*PH,T0=performance.now(),red=matchMedia(&#x27;(prefers-reduced-motion: reduce)&#x27;).matches;
+function frame(now){
+ var tm=red?7500:Math.max(0,now-T0)%CYC,k=tm&lt;PH?&#x27;p&#x27;:&#x27;c&#x27;,m=M[k],lt=tm%PH,o=1-0.92*ease((lt-1000)/6000);
+ function sx(q){return X0+(X1-X0)*q/m.qx}function sy(h){return Y1-(Y1-Y0)*Math.max(0,Math.min(m.hx,h))/m.hx}
+ cx.fillStyle=&#x27;#fbfaf6&#x27;;cx.fillRect(0,0,W,H);
+ m.ht.forEach(function(h){cx.strokeStyle=LN;cx.lineWidth=1;cx.beginPath();cx.moveTo(X0,sy(h));cx.lineTo(X1,sy(h));cx.stroke();t(String(h),X0-10,sy(h)+8,22,MU,&#x27;right&#x27;)});
+ m.qt.forEach(function(q){t(String(q),sx(q),Y1+30,22,MU,&#x27;center&#x27;)});
+ t(&#x27;Caudal Q (L/min)&#x27;,(X0+X1)/2,Y1+62,22,INK,&#x27;center&#x27;);t(&#x27;H (m)&#x27;,X0-10,Y0-14,22,INK,&#x27;right&#x27;,600);
+ function sys(oo,col,lw,dash){var R=Kof(m,oo);cx.save();if(dash)cx.setLineDash(dash);cx.strokeStyle=col;cx.lineWidth=lw;cx.beginPath();for(var q=0;q&lt;=m.qx;q+=m.qx/100){var h=m.hs+R*q*q;if(h&gt;m.hx)break;q?cx.lineTo(sx(q),sy(h)):cx.moveTo(sx(q),sy(h))}cx.stroke();cx.restore()}
+ sys(1,FA,2,[6,6]);
+ cx.strokeStyle=S1;cx.lineWidth=4;cx.beginPath();for(var q=0;q&lt;=m.Qm;q+=m.Qm/100){q?cx.lineTo(sx(q),sy(m.H0(q))):cx.moveTo(sx(q),sy(m.H0(q)))}cx.stroke();
+ sys(o,INK,3);
+ var p1=op(m,1),p=op(m,o);
+ cx.beginPath();cx.arc(sx(p1.Q),sy(p1.H),8,0,7);cx.fillStyle=&#x27;#fbfaf6&#x27;;cx.fill();cx.strokeStyle=S1;cx.lineWidth=3;cx.stroke();
+ t(&#x27;abierta&#x27;,sx(p1.Q)-14,sy(p1.H)+30,20,MU,&#x27;right&#x27;);
+ cx.beginPath();cx.arc(sx(p.Q),sy(p.H),12,0,7);cx.fillStyle=&#x27;#fbfaf6&#x27;;cx.fill();cx.beginPath();cx.arc(sx(p.Q),sy(p.H),9,0,7);cx.fillStyle=INK;cx.fill();
+ t(&#x27;Bomba&#x27;,sx(m.Qm*0.45),sy(m.H0(m.Qm*0.45))-16,22,INK,&#x27;left&#x27;,600);
+ // panel derecho
+ var PX=612,PW=338;cx.fillStyle=SUNK;rr(PX,24,PW,452,12);cx.fill();
+ t(m.n,PX+22,68,28,INK,&#x27;left&#x27;,700);
+ t(&#x27;Válvula &#x27;+Math.round(o*100)+&#x27; %&#x27;,PX+22,108,22,MU);cx.fillStyle=&#x27;#fbfaf6&#x27;;rr(PX+22,120,PW-44,20,6);cx.fill();cx.fillStyle=AC;rr(PX+22,120,Math.max(0.01,(PW-44)*o),20,6);cx.fill();
+ function meter(lbl,val,v0,y,u,dec){var d=(val-v0)/v0*100,up=d&gt;0.5,dn=d&lt;-0.5;
+  t(lbl,PX+22,y,22,MU);t(n(val,dec)+&#x27; &#x27;+u,PX+PW-22,y,26,INK,&#x27;right&#x27;,600,MO);
+  var tx=up?&#x27;▲ sube &#x27;+n(Math.abs(d),0)+&#x27; %&#x27;:dn?&#x27;▼ baja &#x27;+n(Math.abs(d),0)+&#x27; %&#x27;:&#x27;igual que abierta&#x27;;t(tx,PX+22,y+34,22,INK,&#x27;left&#x27;,up||dn?600:400)}
+ meter(&#x27;Potencia al freno&#x27;,p.b,p1.b,196,&#x27;W&#x27;,0);
+ meter(&#x27;Corriente&#x27;,p.I,p1.I,290,&#x27;A&#x27;,2);
+ var msg=k===&#x27;c&#x27;?[&#x27;En la centrífuga, al revés:&#x27;,&#x27;el bhp y la corriente&#x27;,&#x27;bajan.&#x27;]:[&#x27;Como en el módulo:&#x27;,&#x27;el bhp y la corriente&#x27;,&#x27;suben.&#x27;];
+ if(lt&gt;1200)msg.forEach(function(s,i){t(s,PX+22,386+i*30,22,INK,&#x27;left&#x27;,i===2?700:400)});
+ if(!red)requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);if(red)frame(0);
+})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">14</p>
+</section>
+<section id="pregunta-serie" data-transition="fade" style="display:flex; flex-direction:column; gap:44px; justify-content:center; padding:128px 128px 160px; background:#a8501a; font-family:'IBM Plex Sans', Arial, sans-serif; color:#f4f3ee">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#ffd3b0">Antes de la animación · lo vieron en la otra clase</p>
+  <h1 style="width:1600px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.15; color:#f4f3ee">Con dos bombas en serie, la cabeza no se duplica. ¿Cuál es la razón principal?</h1>
+  <p style="width:1600px; font-size:36px; line-height:1.35; color:#ffd3b0">En la otra clase vieron que la teoría no se cumple. Aquí se busca el porqué.</p>
+  <div style="display:flex; flex-direction:row; gap:32px"><div style="display:flex; flex-direction:row; gap:24px; align-items:center; flex:1; padding:32px 40px; background:#8f4314; border-radius:16px"><p style="width:64px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:700; line-height:1; color:#ffd3b0">A</p><p style="font-size:40px; font-weight:500; line-height:1.25; color:#f4f3ee">Se pierde energía en la tubería entre las dos bombas</p></div><div style="display:flex; flex-direction:row; gap:24px; align-items:center; flex:1; padding:32px 40px; background:#8f4314; border-radius:16px"><p style="width:64px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:700; line-height:1; color:#ffd3b0">B</p><p style="font-size:40px; font-weight:500; line-height:1.25; color:#f4f3ee">El caudal también sube y la fricción crece con Q²</p></div><div style="display:flex; flex-direction:row; gap:24px; align-items:center; flex:1; padding:32px 40px; background:#8f4314; border-radius:16px"><p style="width:64px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:700; line-height:1; color:#ffd3b0">C</p><p style="font-size:40px; font-weight:500; line-height:1.25; color:#f4f3ee">En la práctica, las dos bombas nunca son idénticas</p></div></div>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#ffd3b0">15</p>
+</section>
+<section id="serie-paralelo" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Punto de operación · Serie y paralelo, 1 de 2</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">En serie, la cabeza no se duplica</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; justify-content:end">
+    <div style="display:flex; flex-direction:column; gap:20px; width:650px; flex:none">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">La curva sí se duplica</h3>
+        <p style="font-size:26px; line-height:1.4; color:#4a5866">A un mismo caudal, se suman las cabezas: <i>H</i>(serie) = 2 <i>H</i>(<i>Q</i>).</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#13293d; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#f0a46e">¿Por qué no se duplica <i>H</i>?</h3>
+        <p style="font-size:26px; line-height:1.4; color:#f4f3ee">El caudal no se queda igual: sube, la fricción crece con <i>Q</i>² y el punto se corre por la curva combinada. La cabeza sube 26 %, no 100 %.</p>
+      </div>
+      <p style="padding:0 0 0 20px; font-size:26px; line-height:1.4; color:#4a5866; border-left:5px solid #a8501a"><b>Caso especial:</b> la cabeza se duplicaría si el sistema fijara el caudal (curva del sistema vertical).</p>
+      <p style="font-size:26px; line-height:1.4; color:#1f6b94"><a href="../interactivos/serie-paralelo.html" target="_blank" rel="noopener">Abrir la versión interactiva ↗</a></p>
+    </div>
+  </div>
+  <iframe class="emb" title="Animación" sandbox="allow-scripts" style="position:absolute; left:128px; top:302px; width:974px; height:580px; border:0" data-doc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;html,body{margin:0;height:100%;background:#fbfaf6;overflow:hidden;border-radius:12px}canvas{display:block;width:100%;height:100%}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;canvas id=&quot;c&quot;&gt;&lt;/canvas&gt;&lt;script&gt;
+(function(){
+var MODE=&#x27;ser&#x27;;
+var W=974,H=580,cv=document.getElementById(&#x27;c&#x27;),cx=cv.getContext(&#x27;2d&#x27;);
+var F=&#x27;&quot;IBM Plex Sans&quot;,&quot;Segoe UI&quot;,Arial,sans-serif&#x27;,MO=&#x27;&quot;IBM Plex Mono&quot;,Consolas,&quot;Courier New&quot;,monospace&#x27;;
+var BG=&#x27;#fbfaf6&#x27;,INK=&#x27;#13293d&#x27;,MU=&#x27;#4a5866&#x27;,LN=&#x27;#dfe2dd&#x27;,SUNK=&#x27;#eceeea&#x27;,S3=&#x27;#1baf7a&#x27;,C=MODE===&#x27;ser&#x27;?&#x27;#2a78d6&#x27;:&#x27;#eb6834&#x27;;
+function size(){var d=window.devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;var k=Math.min(innerWidth/W,innerHeight/H);cx.setTransform(k*d,0,0,k*d,0,0)}
+size();addEventListener(&#x27;resize&#x27;,size);
+var QM=150.4,HS=2,K=6.8e-4;
+function H1(q){return 22-9.722e-4*q*q}function sys(q){return HS+K*q*q}
+function solve(f,a,b){for(var i=0;i&lt;50;i++){var c=(a+b)/2;if(f(c)&gt;0)a=c;else b=c}return(a+b)/2}
+function Hc(q,f){return MODE===&#x27;ser&#x27;?(1+f)*H1(q):H1(q/(1+f))}
+var Q1=solve(function(q){return H1(q)-sys(q)},0,QM),H1o=sys(Q1);
+var QR=solve(function(q){return Hc(q,1)-sys(q)},0,2*QM),HR=sys(QR);
+var QE=MODE===&#x27;ser&#x27;?Q1:2*Q1,HE=MODE===&#x27;ser&#x27;?2*H1o:H1o;
+var X0=72,X1=620,Y0=34,Y1=488,QX=MODE===&#x27;ser&#x27;?200:320,HX=MODE===&#x27;ser&#x27;?46:26;
+function sx(q){return X0+(X1-X0)*q/QX}function sy(h){return Y1-(Y1-Y0)*Math.max(0,Math.min(HX,h))/HX}
+function t(s,x,y,sz,c,al,w,f){cx.font=(w||400)+&#x27; &#x27;+sz+&#x27;px &#x27;+(f||F);cx.fillStyle=c;cx.textAlign=al||&#x27;left&#x27;;cx.fillText(s,x,y)}
+function n(x,d){return x.toFixed(d).replace(&#x27;.&#x27;,&#x27;,&#x27;)}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function ease(x){return x&lt;0?0:x&gt;1?1:x*x*(3-2*x)}
+function dot(q,h,col,r,hollow,dashd,al){cx.save();cx.globalAlpha=al==null?1:al;cx.beginPath();cx.arc(sx(q),sy(h),r+3,0,7);cx.fillStyle=BG;if(!dashd)cx.fill();cx.beginPath();cx.arc(sx(q),sy(h),r,0,7);if(hollow||dashd){if(dashd)cx.setLineDash([4,4]);cx.strokeStyle=col;cx.lineWidth=3.5;cx.stroke()}else{cx.fillStyle=col;cx.fill()}cx.restore()}
+function line(x1,y1,x2,y2,col,al,dsh,lw){cx.save();cx.globalAlpha=al;if(dsh)cx.setLineDash(dsh);cx.strokeStyle=col;cx.lineWidth=lw||2;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();cx.restore()}
+var CYC=17500,T0=performance.now(),red=matchMedia(&#x27;(prefers-reduced-motion: reduce)&#x27;).matches;
+function frame(now){
+ var tm=red?16000:Math.max(0,now-T0)%CYC;
+ cx.fillStyle=BG;cx.fillRect(0,0,W,H);
+ var ht=MODE===&#x27;ser&#x27;?[0,10,20,30,40]:[0,5,10,15,20,25],qt=MODE===&#x27;ser&#x27;?[0,50,100,150,200]:[0,80,160,240,320];
+ ht.forEach(function(h){line(X0,sy(h),X1,sy(h),LN,1,null,1);t(String(h),X0-10,sy(h)+8,22,MU,&#x27;right&#x27;)});
+ qt.forEach(function(q){t(String(q),sx(q),Y1+30,22,MU,&#x27;center&#x27;)});
+ t(&#x27;Caudal Q (L/min)&#x27;,(X0+X1)/2,Y1+62,22,INK,&#x27;center&#x27;);t(&#x27;H (m)&#x27;,X0-10,Y0-10,22,INK,&#x27;right&#x27;,600);
+ // sistema
+ cx.strokeStyle=INK;cx.lineWidth=3;cx.beginPath();for(var i=0;i&lt;=120;i++){var q=QX*i/120,hh=sys(q);if(hh&gt;HX)break;i?cx.lineTo(sx(q),sy(hh)):cx.moveTo(sx(q),sy(hh))}cx.stroke();
+ var qs=Math.min(Math.sqrt((HX*0.82-HS)/K),QX*0.8);t(&#x27;Sistema&#x27;,sx(qs)+14,sy(sys(qs))+24,22,INK,&#x27;left&#x27;,600);
+ // una bomba
+ cx.strokeStyle=S3;cx.lineWidth=3.5;cx.beginPath();for(var i=0;i&lt;=120;i++){var q=QM*i/120;i?cx.lineTo(sx(q),sy(H1(q))):cx.moveTo(sx(q),sy(H1(q)))}cx.stroke();
+ t(&#x27;1 bomba&#x27;,sx(QM)+8,sy(0)-8,22,INK,&#x27;left&#x27;,600);
+ // curva combinada
+ var f=ease((tm-1200)/3000);
+ if(f&gt;0){cx.strokeStyle=C;cx.lineWidth=3.5;cx.beginPath();var qm=MODE===&#x27;ser&#x27;?QM:QM*(1+f);for(var i=0;i&lt;=120;i++){var q=qm*i/120,hh=Hc(q,f);i?cx.lineTo(sx(q),sy(hh)):cx.moveTo(sx(q),sy(hh))}cx.stroke();
+  if(tm&lt;4600){if(MODE===&#x27;ser&#x27;)[40,80,120].forEach(function(q){line(sx(q),sy(H1(q)),sx(q),sy((1+f)*H1(q))+6,C,0.8,[4,5])});
+   else [5,10,15].forEach(function(hh){var q=Math.sqrt((22-hh)/9.722e-4);line(sx(q),sy(hh),sx((1+f)*q)-6,sy(hh),C,0.8,[4,5])})}
+  if(f&gt;=1){if(MODE===&#x27;ser&#x27;)t(&#x27;2 en serie&#x27;,sx(8),sy(44)-10,22,INK,&#x27;left&#x27;,600);else t(&#x27;2 en paralelo&#x27;,sx(300),sy(0)-12,22,INK,&#x27;right&#x27;,600)}}
+ // punto de una bomba
+ dot(Q1,H1o,S3,9);
+ // esperado
+ var ge=ease((tm-4200)/1200);
+ if(ge&gt;0){line(sx(Q1),sy(H1o),sx(QE),sy(HE),C,0.7*ge,[3,5],2);dot(QE,HE,C,10,false,true,ge);
+  t(MODE===&#x27;ser&#x27;?&#x27;esperado: 2H&#x27;:&#x27;esperado: 2Q&#x27;,sx(QE)+(MODE===&#x27;ser&#x27;?-16:0),sy(HE)+(MODE===&#x27;ser&#x27;?-18:32),22,INK,MODE===&#x27;ser&#x27;?&#x27;right&#x27;:&#x27;center&#x27;,600)}
+ // deslizamiento hasta el punto real
+ var sl=ease((tm-6400)/3000);
+ if(sl&gt;0){var qq=QE+(QR-QE)*sl,hh=Hc(qq,1);dot(qq,hh,C,10)}
+ var done=tm&gt;=9400;
+ if(done){if(MODE===&#x27;ser&#x27;){line(sx(QR),sy(HR),sx(QR),sy(HR/2),C,0.9,[4,5]);dot(QR,HR/2,C,8,true)}else{line(sx(QR),sy(HR),sx(QR/2),sy(HR),C,0.9,[4,5]);dot(QR/2,HR,C,8,true)}
+  dot(QR,HR,C,10);t(&#x27;real&#x27;,sx(QR)+16,sy(HR)+(MODE===&#x27;ser&#x27;?30:-14),22,INK,&#x27;left&#x27;,700)}
+ // panel
+ var PX=652,PW=298,L=PX+22,R=PX+PW-22;cx.fillStyle=SUNK;rr(PX,24,PW,532,12);cx.fill();
+ t(MODE===&#x27;ser&#x27;?&#x27;Dos en serie&#x27;:&#x27;Dos en paralelo&#x27;,L,68,26,C,&#x27;left&#x27;,700);
+ t(MODE===&#x27;ser&#x27;?&#x27;Mismo Q: se suman las H&#x27;:&#x27;Misma H: se suman los Q&#x27;,L,104,22,INK);
+ t(&#x27;Una bomba&#x27;,L,156,22,MU);t(n(Q1,0)+&#x27; L/min · &#x27;+n(H1o,1)+&#x27; m&#x27;,R,188,22,INK,&#x27;right&#x27;,600,MO);
+ if(ge&gt;0){cx.globalAlpha=ge;t(&#x27;Se esperaría&#x27;,L,240,22,MU);t(MODE===&#x27;ser&#x27;?n(HE,1)+&#x27; m (×2)&#x27;:n(QE,0)+&#x27; L/min (×2)&#x27;,R,272,22,INK,&#x27;right&#x27;,600,MO);cx.globalAlpha=1}
+ if(done){t(&#x27;Real&#x27;,L,324,22,MU);t(n(QR,0)+&#x27; L/min · &#x27;+n(HR,1)+&#x27; m&#x27;,R,356,22,INK,&#x27;right&#x27;,600,MO);
+  var g=MODE===&#x27;ser&#x27;?(HR/H1o-1)*100:(QR/Q1-1)*100;
+  t((MODE===&#x27;ser&#x27;?&#x27;H: +&#x27;:&#x27;Q: +&#x27;)+n(g,0)+&#x27; %, no +100 %&#x27;,L,404,22,INK,&#x27;left&#x27;,700);
+  t(&#x27;La fricción del sistema&#x27;,L,446,22,INK);t(&#x27;se queda con el resto.&#x27;,L,474,22,INK);
+  t(&#x27;Cada bomba opera en:&#x27;,L,514,22,MU);t(MODE===&#x27;ser&#x27;?n(QR,0)+&#x27; L/min y &#x27;+n(HR/2,1)+&#x27; m&#x27;:n(QR/2,0)+&#x27; L/min y &#x27;+n(HR,1)+&#x27; m&#x27;,L,542,22,MU)}
+ if(!red)requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);if(red)frame(0);
+})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">16</p>
+</section>
+<section id="paralelo" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Punto de operación · Serie y paralelo, 2 de 2</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">En paralelo, el caudal no se duplica</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; justify-content:end">
+    <div style="display:flex; flex-direction:column; gap:20px; width:650px; flex:none">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">La curva sí se duplica</h3>
+        <p style="font-size:26px; line-height:1.4; color:#4a5866">A una misma cabeza, se suman los caudales: <i>Q</i>(paralelo) = 2 <i>Q</i>(<i>H</i>).</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#13293d; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#f0a46e">¿Por qué no se duplica <i>Q</i>?</h3>
+        <p style="font-size:26px; line-height:1.4; color:#f4f3ee">Al subir el caudal, la fricción exige más cabeza y el punto se corre por la curva combinada. El caudal sube 34 %, no 100 %.</p>
+      </div>
+      <p style="padding:0 0 0 20px; font-size:26px; line-height:1.4; color:#4a5866; border-left:5px solid #a8501a"><b>Caso especial:</b> el caudal se duplicaría con un sistema plano (solo cabeza estática, sin fricción).</p>
+      <p style="font-size:26px; line-height:1.4; color:#1f6b94"><a href="../interactivos/serie-paralelo.html" target="_blank" rel="noopener">Abrir la versión interactiva ↗</a></p>
+    </div>
+  </div>
+  <iframe class="emb" title="Animación" sandbox="allow-scripts" style="position:absolute; left:128px; top:302px; width:974px; height:580px; border:0" data-doc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;html,body{margin:0;height:100%;background:#fbfaf6;overflow:hidden;border-radius:12px}canvas{display:block;width:100%;height:100%}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;canvas id=&quot;c&quot;&gt;&lt;/canvas&gt;&lt;script&gt;
+(function(){
+var MODE=&#x27;par&#x27;;
+var W=974,H=580,cv=document.getElementById(&#x27;c&#x27;),cx=cv.getContext(&#x27;2d&#x27;);
+var F=&#x27;&quot;IBM Plex Sans&quot;,&quot;Segoe UI&quot;,Arial,sans-serif&#x27;,MO=&#x27;&quot;IBM Plex Mono&quot;,Consolas,&quot;Courier New&quot;,monospace&#x27;;
+var BG=&#x27;#fbfaf6&#x27;,INK=&#x27;#13293d&#x27;,MU=&#x27;#4a5866&#x27;,LN=&#x27;#dfe2dd&#x27;,SUNK=&#x27;#eceeea&#x27;,S3=&#x27;#1baf7a&#x27;,C=MODE===&#x27;ser&#x27;?&#x27;#2a78d6&#x27;:&#x27;#eb6834&#x27;;
+function size(){var d=window.devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;var k=Math.min(innerWidth/W,innerHeight/H);cx.setTransform(k*d,0,0,k*d,0,0)}
+size();addEventListener(&#x27;resize&#x27;,size);
+var QM=150.4,HS=2,K=6.8e-4;
+function H1(q){return 22-9.722e-4*q*q}function sys(q){return HS+K*q*q}
+function solve(f,a,b){for(var i=0;i&lt;50;i++){var c=(a+b)/2;if(f(c)&gt;0)a=c;else b=c}return(a+b)/2}
+function Hc(q,f){return MODE===&#x27;ser&#x27;?(1+f)*H1(q):H1(q/(1+f))}
+var Q1=solve(function(q){return H1(q)-sys(q)},0,QM),H1o=sys(Q1);
+var QR=solve(function(q){return Hc(q,1)-sys(q)},0,2*QM),HR=sys(QR);
+var QE=MODE===&#x27;ser&#x27;?Q1:2*Q1,HE=MODE===&#x27;ser&#x27;?2*H1o:H1o;
+var X0=72,X1=620,Y0=34,Y1=488,QX=MODE===&#x27;ser&#x27;?200:320,HX=MODE===&#x27;ser&#x27;?46:26;
+function sx(q){return X0+(X1-X0)*q/QX}function sy(h){return Y1-(Y1-Y0)*Math.max(0,Math.min(HX,h))/HX}
+function t(s,x,y,sz,c,al,w,f){cx.font=(w||400)+&#x27; &#x27;+sz+&#x27;px &#x27;+(f||F);cx.fillStyle=c;cx.textAlign=al||&#x27;left&#x27;;cx.fillText(s,x,y)}
+function n(x,d){return x.toFixed(d).replace(&#x27;.&#x27;,&#x27;,&#x27;)}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function ease(x){return x&lt;0?0:x&gt;1?1:x*x*(3-2*x)}
+function dot(q,h,col,r,hollow,dashd,al){cx.save();cx.globalAlpha=al==null?1:al;cx.beginPath();cx.arc(sx(q),sy(h),r+3,0,7);cx.fillStyle=BG;if(!dashd)cx.fill();cx.beginPath();cx.arc(sx(q),sy(h),r,0,7);if(hollow||dashd){if(dashd)cx.setLineDash([4,4]);cx.strokeStyle=col;cx.lineWidth=3.5;cx.stroke()}else{cx.fillStyle=col;cx.fill()}cx.restore()}
+function line(x1,y1,x2,y2,col,al,dsh,lw){cx.save();cx.globalAlpha=al;if(dsh)cx.setLineDash(dsh);cx.strokeStyle=col;cx.lineWidth=lw||2;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();cx.restore()}
+var CYC=17500,T0=performance.now(),red=matchMedia(&#x27;(prefers-reduced-motion: reduce)&#x27;).matches;
+function frame(now){
+ var tm=red?16000:Math.max(0,now-T0)%CYC;
+ cx.fillStyle=BG;cx.fillRect(0,0,W,H);
+ var ht=MODE===&#x27;ser&#x27;?[0,10,20,30,40]:[0,5,10,15,20,25],qt=MODE===&#x27;ser&#x27;?[0,50,100,150,200]:[0,80,160,240,320];
+ ht.forEach(function(h){line(X0,sy(h),X1,sy(h),LN,1,null,1);t(String(h),X0-10,sy(h)+8,22,MU,&#x27;right&#x27;)});
+ qt.forEach(function(q){t(String(q),sx(q),Y1+30,22,MU,&#x27;center&#x27;)});
+ t(&#x27;Caudal Q (L/min)&#x27;,(X0+X1)/2,Y1+62,22,INK,&#x27;center&#x27;);t(&#x27;H (m)&#x27;,X0-10,Y0-10,22,INK,&#x27;right&#x27;,600);
+ // sistema
+ cx.strokeStyle=INK;cx.lineWidth=3;cx.beginPath();for(var i=0;i&lt;=120;i++){var q=QX*i/120,hh=sys(q);if(hh&gt;HX)break;i?cx.lineTo(sx(q),sy(hh)):cx.moveTo(sx(q),sy(hh))}cx.stroke();
+ var qs=Math.min(Math.sqrt((HX*0.82-HS)/K),QX*0.8);t(&#x27;Sistema&#x27;,sx(qs)+14,sy(sys(qs))+24,22,INK,&#x27;left&#x27;,600);
+ // una bomba
+ cx.strokeStyle=S3;cx.lineWidth=3.5;cx.beginPath();for(var i=0;i&lt;=120;i++){var q=QM*i/120;i?cx.lineTo(sx(q),sy(H1(q))):cx.moveTo(sx(q),sy(H1(q)))}cx.stroke();
+ t(&#x27;1 bomba&#x27;,sx(QM)+8,sy(0)-8,22,INK,&#x27;left&#x27;,600);
+ // curva combinada
+ var f=ease((tm-1200)/3000);
+ if(f&gt;0){cx.strokeStyle=C;cx.lineWidth=3.5;cx.beginPath();var qm=MODE===&#x27;ser&#x27;?QM:QM*(1+f);for(var i=0;i&lt;=120;i++){var q=qm*i/120,hh=Hc(q,f);i?cx.lineTo(sx(q),sy(hh)):cx.moveTo(sx(q),sy(hh))}cx.stroke();
+  if(tm&lt;4600){if(MODE===&#x27;ser&#x27;)[40,80,120].forEach(function(q){line(sx(q),sy(H1(q)),sx(q),sy((1+f)*H1(q))+6,C,0.8,[4,5])});
+   else [5,10,15].forEach(function(hh){var q=Math.sqrt((22-hh)/9.722e-4);line(sx(q),sy(hh),sx((1+f)*q)-6,sy(hh),C,0.8,[4,5])})}
+  if(f&gt;=1){if(MODE===&#x27;ser&#x27;)t(&#x27;2 en serie&#x27;,sx(8),sy(44)-10,22,INK,&#x27;left&#x27;,600);else t(&#x27;2 en paralelo&#x27;,sx(300),sy(0)-12,22,INK,&#x27;right&#x27;,600)}}
+ // punto de una bomba
+ dot(Q1,H1o,S3,9);
+ // esperado
+ var ge=ease((tm-4200)/1200);
+ if(ge&gt;0){line(sx(Q1),sy(H1o),sx(QE),sy(HE),C,0.7*ge,[3,5],2);dot(QE,HE,C,10,false,true,ge);
+  t(MODE===&#x27;ser&#x27;?&#x27;esperado: 2H&#x27;:&#x27;esperado: 2Q&#x27;,sx(QE)+(MODE===&#x27;ser&#x27;?-16:0),sy(HE)+(MODE===&#x27;ser&#x27;?-18:32),22,INK,MODE===&#x27;ser&#x27;?&#x27;right&#x27;:&#x27;center&#x27;,600)}
+ // deslizamiento hasta el punto real
+ var sl=ease((tm-6400)/3000);
+ if(sl&gt;0){var qq=QE+(QR-QE)*sl,hh=Hc(qq,1);dot(qq,hh,C,10)}
+ var done=tm&gt;=9400;
+ if(done){if(MODE===&#x27;ser&#x27;){line(sx(QR),sy(HR),sx(QR),sy(HR/2),C,0.9,[4,5]);dot(QR,HR/2,C,8,true)}else{line(sx(QR),sy(HR),sx(QR/2),sy(HR),C,0.9,[4,5]);dot(QR/2,HR,C,8,true)}
+  dot(QR,HR,C,10);t(&#x27;real&#x27;,sx(QR)+16,sy(HR)+(MODE===&#x27;ser&#x27;?30:-14),22,INK,&#x27;left&#x27;,700)}
+ // panel
+ var PX=652,PW=298,L=PX+22,R=PX+PW-22;cx.fillStyle=SUNK;rr(PX,24,PW,532,12);cx.fill();
+ t(MODE===&#x27;ser&#x27;?&#x27;Dos en serie&#x27;:&#x27;Dos en paralelo&#x27;,L,68,26,C,&#x27;left&#x27;,700);
+ t(MODE===&#x27;ser&#x27;?&#x27;Mismo Q: se suman las H&#x27;:&#x27;Misma H: se suman los Q&#x27;,L,104,22,INK);
+ t(&#x27;Una bomba&#x27;,L,156,22,MU);t(n(Q1,0)+&#x27; L/min · &#x27;+n(H1o,1)+&#x27; m&#x27;,R,188,22,INK,&#x27;right&#x27;,600,MO);
+ if(ge&gt;0){cx.globalAlpha=ge;t(&#x27;Se esperaría&#x27;,L,240,22,MU);t(MODE===&#x27;ser&#x27;?n(HE,1)+&#x27; m (×2)&#x27;:n(QE,0)+&#x27; L/min (×2)&#x27;,R,272,22,INK,&#x27;right&#x27;,600,MO);cx.globalAlpha=1}
+ if(done){t(&#x27;Real&#x27;,L,324,22,MU);t(n(QR,0)+&#x27; L/min · &#x27;+n(HR,1)+&#x27; m&#x27;,R,356,22,INK,&#x27;right&#x27;,600,MO);
+  var g=MODE===&#x27;ser&#x27;?(HR/H1o-1)*100:(QR/Q1-1)*100;
+  t((MODE===&#x27;ser&#x27;?&#x27;H: +&#x27;:&#x27;Q: +&#x27;)+n(g,0)+&#x27; %, no +100 %&#x27;,L,404,22,INK,&#x27;left&#x27;,700);
+  t(&#x27;La fricción del sistema&#x27;,L,446,22,INK);t(&#x27;se queda con el resto.&#x27;,L,474,22,INK);
+  t(&#x27;Cada bomba opera en:&#x27;,L,514,22,MU);t(MODE===&#x27;ser&#x27;?n(QR,0)+&#x27; L/min y &#x27;+n(HR/2,1)+&#x27; m&#x27;:n(QR/2,0)+&#x27; L/min y &#x27;+n(HR,1)+&#x27; m&#x27;,L,542,22,MU)}
+ if(!red)requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);if(red)frame(0);
+})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">17</p>
+</section>
+<section id="serie-o-paralelo" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Punto de operación · Serie y paralelo, 3 de 3</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">¿Cuándo conviene serie y cuándo paralelo?</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; justify-content:end">
+    <div style="display:flex; flex-direction:column; gap:20px; width:650px; flex:none">
+      <div style="display:flex; flex-direction:column; gap:10px; padding:24px 32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Sistema empinado → serie</h3>
+        <p style="font-size:26px; line-height:1.4; color:#4a5866">Mucha fricción: tuberías largas o angostas, muchos accesorios.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; padding:24px 32px; background:#fbfaf6; border-top:6px solid #a8501a; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#a8501a">Sistema plano → paralelo</h3>
+        <p style="font-size:26px; line-height:1.4; color:#4a5866">Cabeza estática alta y poca fricción; también demanda variable.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; padding:24px 32px; background:#13293d; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#f0a46e">Δz mayor que el cierre → solo serie</h3>
+        <p style="font-size:26px; line-height:1.4; color:#f4f3ee">En paralelo la cabeza de cierre sigue siendo la de una bomba.</p>
+      </div>
+      <p style="font-size:26px; line-height:1.4; color:#1f6b94"><a href="../interactivos/serie-paralelo.html" target="_blank" rel="noopener">Probar otros sistemas ↗</a></p>
+    </div>
+  </div>
+  <iframe class="emb" title="Animación" sandbox="allow-scripts" style="position:absolute; left:128px; top:302px; width:974px; height:580px; border:0" data-doc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;html,body{margin:0;height:100%;background:#fbfaf6;overflow:hidden;border-radius:12px}canvas{display:block;width:100%;height:100%}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;canvas id=&quot;c&quot;&gt;&lt;/canvas&gt;&lt;script&gt;
+(function(){
+var W=974,H=580,cv=document.getElementById(&#x27;c&#x27;),cx=cv.getContext(&#x27;2d&#x27;);
+var F=&#x27;&quot;IBM Plex Sans&quot;,&quot;Segoe UI&quot;,Arial,sans-serif&#x27;,MO=&#x27;&quot;IBM Plex Mono&quot;,Consolas,&quot;Courier New&quot;,monospace&#x27;;
+var BG=&#x27;#fbfaf6&#x27;,INK=&#x27;#13293d&#x27;,MU=&#x27;#4a5866&#x27;,LN=&#x27;#dfe2dd&#x27;,SUNK=&#x27;#eceeea&#x27;,S1=&#x27;#2a78d6&#x27;,S2=&#x27;#eb6834&#x27;,S3=&#x27;#1baf7a&#x27;,TRK=&#x27;#dde2df&#x27;;
+function size(){var d=window.devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;var k=Math.min(innerWidth/W,innerHeight/H);cx.setTransform(k*d,0,0,k*d,0,0)}
+size();addEventListener(&#x27;resize&#x27;,size);
+var QM=150.4;function H1(q){return 22-9.722e-4*q*q}
+var CASES=[{n:&#x27;Mucha fricción&#x27;,d:&#x27;Δz = 2 m, K alto&#x27;,hs:2,K:2e-3},{n:&#x27;Cabeza estática alta&#x27;,d:&#x27;Δz = 16 m, poca fricción&#x27;,hs:16,K:1.2e-4},{n:&#x27;Estática muy alta&#x27;,d:&#x27;Δz = 26 m (cierre: 22 m)&#x27;,hs:26,K:2e-4}];
+function solve(f,a,b){if(f(a)&lt;=0)return null;for(var i=0;i&lt;50;i++){var c=(a+b)/2;if(f(c)&gt;0)a=c;else b=c}return(a+b)/2}
+function ops(hs,K){var s=function(q){return hs+K*q*q};return{one:solve(function(q){return H1(q)-s(q)},0,QM),ser:solve(function(q){return 2*H1(q)-s(q)},0,QM),par:solve(function(q){return H1(q/2)-s(q)},0,2*QM),s:s}}
+var X0=72,X1=620,Y0=34,Y1=488;function sx(q){return X0+(X1-X0)*q/320}function sy(h){return Y1-(Y1-Y0)*Math.max(0,Math.min(46,h))/46}
+function t(s,x,y,sz,c,al,w,f){cx.font=(w||400)+&#x27; &#x27;+sz+&#x27;px &#x27;+(f||F);cx.fillStyle=c;cx.textAlign=al||&#x27;left&#x27;;cx.fillText(s,x,y)}
+function n(x,d){return x.toFixed(d).replace(&#x27;.&#x27;,&#x27;,&#x27;)}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function ease(x){return x&lt;0?0:x&gt;1?1:x*x*(3-2*x)}
+function curve(fn,qm,col){cx.strokeStyle=col;cx.lineWidth=3.5;cx.beginPath();for(var i=0;i&lt;=120;i++){var q=qm*i/120;i?cx.lineTo(sx(q),sy(fn(q))):cx.moveTo(sx(q),sy(fn(q)))}cx.stroke()}
+function dot(q,h,col){cx.beginPath();cx.arc(sx(q),sy(h),12,0,7);cx.fillStyle=BG;cx.fill();cx.beginPath();cx.arc(sx(q),sy(h),9,0,7);cx.fillStyle=col;cx.fill()}
+var PH=6500,T0=performance.now(),red=matchMedia(&#x27;(prefers-reduced-motion: reduce)&#x27;).matches;
+function frame(now){
+ var tm=red?PH*0.9:Math.max(0,now-T0)%(3*PH),ci=Math.floor(tm/PH),lt=tm%PH,pc=CASES[(ci+2)%3],c=CASES[ci],m=ease(lt/1000);
+ var hs=pc.hs+(c.hs-pc.hs)*m,K=pc.K+(c.K-pc.K)*m,o=ops(hs,K);
+ cx.fillStyle=BG;cx.fillRect(0,0,W,H);
+ for(var h=0;h&lt;=40;h+=10){cx.strokeStyle=LN;cx.lineWidth=1;cx.beginPath();cx.moveTo(X0,sy(h));cx.lineTo(X1,sy(h));cx.stroke();t(String(h),X0-10,sy(h)+8,22,MU,&#x27;right&#x27;)}
+ for(var q=0;q&lt;=320;q+=80)t(String(q),sx(q),Y1+30,22,MU,&#x27;center&#x27;);
+ t(&#x27;Caudal Q (L/min)&#x27;,(X0+X1)/2,Y1+62,22,INK,&#x27;center&#x27;);t(&#x27;H (m)&#x27;,X0-10,Y0-10,22,INK,&#x27;right&#x27;,600);
+ curve(H1,QM,S3);curve(function(q){return 2*H1(q)},QM,S1);curve(function(q){return H1(q/2)},2*QM,S2);
+ t(&#x27;1 bomba&#x27;,sx(QM)+8,sy(0)-8,22,INK,&#x27;left&#x27;,600);t(&#x27;Serie&#x27;,sx(10),sy(44)-10,22,INK,&#x27;left&#x27;,600);t(&#x27;Paralelo&#x27;,sx(300),sy(0)-12,22,INK,&#x27;right&#x27;,600);
+ cx.strokeStyle=INK;cx.lineWidth=3.5;cx.beginPath();for(var i=0;i&lt;=160;i++){var qq=320*i/160,hh=o.s(qq);if(hh&gt;46)break;i?cx.lineTo(sx(qq),sy(hh)):cx.moveTo(sx(qq),sy(hh))}cx.stroke();
+ if(o.one)dot(o.one,o.s(o.one),S3);if(o.ser)dot(o.ser,o.s(o.ser),S1);if(o.par)dot(o.par,o.s(o.par),S2);
+ // panel
+ var PX=652,PW=298,L=PX+22,R=PX+PW-22;cx.fillStyle=SUNK;rr(PX,24,PW,532,12);cx.fill();
+ t(&#x27;Caso &#x27;+(ci+1)+&#x27; de 3&#x27;,L,62,22,MU);t(c.n,L,98,26,INK,&#x27;left&#x27;,700);t(c.d,L,130,22,MU);
+ if(lt&gt;1100){var oc=ops(c.hs,c.K);
+  if(oc.one){var gs=(oc.ser/oc.one-1)*100,gp=(oc.par/oc.one-1)*100,mx=80;
+   t(&#x27;Caudal frente a 1 bomba&#x27;,L,184,22,INK,&#x27;left&#x27;,600);
+   [[&#x27;Serie&#x27;,gs,S1],[&#x27;Paralelo&#x27;,gp,S2]].forEach(function(r,i){var y=226+i*74;t(r[0],L,y,22,INK);t(&#x27;+&#x27;+n(r[1],0)+&#x27; %&#x27;,R,y,24,INK,&#x27;right&#x27;,600,MO);
+    cx.fillStyle=TRK;rr(L,y+12,PW-44,16,8);cx.fill();cx.fillStyle=r[2];rr(L,y+12,Math.max(16,(PW-44)*Math.min(1,r[1]/mx)),16,8);cx.fill()});
+   var win=gs&gt;gp?&#x27;serie&#x27;:&#x27;paralelo&#x27;;t(&#x27;Conviene: &#x27;+win,L,404,26,INK,&#x27;left&#x27;,700);
+   var why=gs&gt;gp?[&#x27;El sistema es empinado:&#x27;,&#x27;sumar cabezas al mismo&#x27;,&#x27;caudal rinde más.&#x27;]:[&#x27;El sistema es casi plano:&#x27;,&#x27;sumar caudales a la misma&#x27;,&#x27;cabeza rinde más.&#x27;];
+   why.forEach(function(s,i){t(s,L,444+i*30,22,INK)});
+  } else {
+   t(&#x27;Una bomba: no entrega&#x27;,L,190,22,INK);t(&#x27;Paralelo: no entrega&#x27;,L,226,22,INK);t(&#x27;Serie: &#x27;+n(oc.ser,0)+&#x27; L/min&#x27;,L,262,22,INK,&#x27;left&#x27;,600);
+   t(&#x27;Conviene: serie&#x27;,L,404,26,INK,&#x27;left&#x27;,700);
+   [&#x27;En paralelo la cabeza de&#x27;,&#x27;cierre sigue siendo 22 m;&#x27;,&#x27;en serie sube a 44 m.&#x27;].forEach(function(s,i){t(s,L,444+i*30,22,INK)})}}
+ if(!red)requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);if(red)frame(0);
+})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">18</p>
+</section>
+<section id="sec-fabricantes" data-transition="fade" style="display:flex; flex-direction:column; gap:40px; justify-content:center; padding:128px; background:#13293d; font-family:'IBM Plex Sans', Arial, sans-serif">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#f0a46e">Parte 4 de 6</p>
+  <h1 style="width:1500px; font-family:'Source Serif 4', Georgia, serif; font-size:112px; font-weight:600; line-height:1.05; color:#f4f3ee">¿Cómo se lee un catálogo?</h1>
+  <p style="width:1300px; font-size:40px; line-height:1.3; color:#bcd0dc">Diagramas de familia, nomenclatura y curvas por modelo</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#8a9aa8">19</p>
+</section>
+<section id="rendimiento" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Diagrama de familia · DAB KDN</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Cada recuadro es un modelo de bomba</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; justify-content:end">
+    <div style="display:flex; flex-direction:column; gap:20px; width:650px; flex:none">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Cómo se lee</h3>
+        <p style="font-size:26px; line-height:1.4; color:#4a5866">Ejes logarítmicos de <i>Q</i> y <i>H</i>; cada recuadro es un modelo con su rango de impulsores.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px 32px; background:#13293d; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#f0a46e">Para qué sirve</h3>
+        <p style="font-size:26px; line-height:1.4; color:#f4f3ee">Una selección preliminar: qué modelos cubren el par <i>Q</i>, <i>H</i>. Después se revisa la curva de cada candidato.</p>
+      </div>
+      <p style="font-size:26px; line-height:1.4; color:#1f6b94"><a href="../interactivos/diagrama-familia.html" target="_blank" rel="noopener">Abrir el diagrama interactivo ↗</a></p>
+    </div>
+  </div>
+  <iframe class="emb" title="Animación" sandbox="allow-scripts" style="position:absolute; left:128px; top:302px; width:974px; height:600px; border:0" data-doc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;html,body{margin:0;height:100%;background:#fbfaf6;overflow:hidden;border-radius:12px}canvas{display:block;width:100%;height:100%}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;canvas id=&quot;c&quot;&gt;&lt;/canvas&gt;&lt;script&gt;
+(function(){
+var D={&quot;tiles&quot;:[{&quot;n&quot;:&quot;100/250&quot;,&quot;c&quot;:&quot;#1d531f&quot;,&quot;p&quot;:[[242,195],[247,193],[253,189],[261,181],[257,166],[234,179]]},{&quot;n&quot;:&quot;100/200&quot;,&quot;c&quot;:&quot;#1d531f&quot;,&quot;p&quot;:[[239,177],[246,175],[253,171],[258,166],[261,160],[253,132],[249,140],[244,147],[231,160]]},{&quot;n&quot;:&quot;80/315&quot;,&quot;c&quot;:&quot;#416b39&quot;,&quot;p&quot;:[[182,211],[185,219],[204,219],[219,216],[229,212],[236,207],[241,200],[243,193],[231,182]]},{&quot;n&quot;:&quot;65/315&quot;,&quot;c&quot;:&quot;#416b39&quot;,&quot;p&quot;:[[175,195],[182,216],[184,216],[202,215],[219,210],[231,204],[236,200],[240,195],[233,191]]},{&quot;n&quot;:&quot;80/250&quot;,&quot;c&quot;:&quot;#416b39&quot;,&quot;p&quot;:[[175,193],[179,200],[215,199],[224,197],[232,194],[239,190],[245,185],[236,170],[186,184]]},{&quot;n&quot;:&quot;80/200&quot;,&quot;c&quot;:&quot;#416b39&quot;,&quot;p&quot;:[[219,179],[227,177],[234,174],[239,170],[243,165],[235,146],[207,157],[217,179]]},{&quot;n&quot;:&quot;80/160&quot;,&quot;c&quot;:&quot;#416b39&quot;,&quot;p&quot;:[[213,158],[224,155],[232,150],[237,145],[244,134],[238,96],[230,111],[226,117],[218,122],[209,124],[209,157]]},{&quot;n&quot;:&quot;65/250&quot;,&quot;c&quot;:&quot;#638558&quot;,&quot;p&quot;:[[167,197],[190,196],[205,193],[216,188],[220,185],[221,182],[215,172],[180,181]]},{&quot;n&quot;:&quot;65/200&quot;,&quot;c&quot;:&quot;#638558&quot;,&quot;p&quot;:[[205,179],[214,174],[221,169],[210,150],[197,157]]},{&quot;n&quot;:&quot;65/160&quot;,&quot;c&quot;:&quot;#638558&quot;,&quot;p&quot;:[[202,157],[208,154],[213,151],[217,146],[220,140],[220,136],[212,126],[197,136]]},{&quot;n&quot;:&quot;65/125&quot;,&quot;c&quot;:&quot;#638558&quot;,&quot;p&quot;:[[199,136],[205,133],[211,129],[216,124],[220,118],[208,90],[203,99],[196,105],[194,128]]},{&quot;n&quot;:&quot;50/250&quot;,&quot;c&quot;:&quot;#87a17d&quot;,&quot;p&quot;:[[147,195],[148,198],[170,197],[184,194],[196,190],[202,185],[206,178],[203,163],[151,187]]},{&quot;n&quot;:&quot;50/200&quot;,&quot;c&quot;:&quot;#87a17d&quot;,&quot;p&quot;:[[182,177],[189,176],[195,173],[201,168],[205,164],[206,163],[201,150],[180,158]]},{&quot;n&quot;:&quot;50/160&quot;,&quot;c&quot;:&quot;#87a17d&quot;,&quot;p&quot;:[[186,159],[197,156],[204,151],[197,128],[177,135],[180,155]]},{&quot;n&quot;:&quot;50/125&quot;,&quot;c&quot;:&quot;#87a17d&quot;,&quot;p&quot;:[[179,137],[187,135],[194,131],[200,126],[204,121],[193,96],[190,100],[185,105],[173,112],[173,121]]},{&quot;n&quot;:&quot;40/250&quot;,&quot;c&quot;:&quot;#aec0a5&quot;,&quot;p&quot;:[[117,178],[126,196],[145,196],[163,193],[176,190],[181,187],[184,185],[181,164]]},{&quot;n&quot;:&quot;40/200&quot;,&quot;c&quot;:&quot;#aec0a5&quot;,&quot;p&quot;:[[125,179],[153,177],[166,175],[173,172],[178,168],[183,164],[187,159],[180,150],[121,167]]},{&quot;n&quot;:&quot;40/160&quot;,&quot;c&quot;:&quot;#aec0a5&quot;,&quot;p&quot;:[[132,163],[148,162],[162,160],[174,155],[183,149],[184,149],[175,125],[133,139]]},{&quot;n&quot;:&quot;40/125&quot;,&quot;c&quot;:&quot;#aec0a5&quot;,&quot;p&quot;:[[131,140],[145,139],[158,136],[168,132],[177,125],[170,95],[167,100],[162,104],[156,108],[150,111]]},{&quot;n&quot;:&quot;32/200&quot;,&quot;c&quot;:&quot;#d5ded1&quot;,&quot;p&quot;:[[70,176],[70,179],[121,179],[139,177],[151,174],[160,169],[167,163],[170,156],[93,165]]},{&quot;n&quot;:&quot;32/200.1&quot;,&quot;c&quot;:&quot;#d5ded1&quot;,&quot;p&quot;:[[66,159],[70,178],[107,177],[119,174],[129,168],[137,161],[143,150],[141,148]]},{&quot;n&quot;:&quot;32/160&quot;,&quot;c&quot;:&quot;#d5ded1&quot;,&quot;p&quot;:[[109,158],[123,157],[134,153],[144,147],[148,143],[150,140],[148,137],[110,141]]},{&quot;n&quot;:&quot;32/160.1&quot;,&quot;c&quot;:&quot;#d5ded1&quot;,&quot;p&quot;:[[62,161],[94,160],[111,158],[127,153],[134,149],[138,146],[134,137],[58,142]]},{&quot;n&quot;:&quot;32/125&quot;,&quot;c&quot;:&quot;#d5ded1&quot;,&quot;p&quot;:[[57,140],[58,144],[109,143],[130,141],[138,139],[144,136],[151,131],[158,123],[145,100],[141,108],[139,111],[135,113],[115,121]]},{&quot;n&quot;:&quot;32/125.1&quot;,&quot;c&quot;:&quot;#d5ded1&quot;,&quot;p&quot;:[[48,116],[54,143],[92,142],[113,139],[126,135],[134,130],[140,125],[130,87],[126,95],[120,101],[114,107],[105,111],[96,113],[83,115]]}],&quot;labels&quot;:{&quot;32/160.1&quot;:[88,151],&quot;32/125.1&quot;:[102,125],&quot;32/200.1&quot;:[98,169],&quot;32/200&quot;:[148,169],&quot;32/125&quot;:[148,123],&quot;32/160&quot;:[142,142],&quot;40/125&quot;:[167,119],&quot;40/200&quot;:[177,162],&quot;40/160&quot;:[169,145],&quot;40/250&quot;:[163,185],&quot;50/125&quot;:[189,119],&quot;50/200&quot;:[194,165],&quot;50/250&quot;:[194,182],&quot;50/160&quot;:[192,146],&quot;65/125&quot;:[210,113],&quot;65/160&quot;:[210,141],&quot;65/200&quot;:[211,167],&quot;65/250&quot;:[213,182],&quot;65/315&quot;:[214,205],&quot;80/160&quot;:[231,133],&quot;80/200&quot;:[231,162],&quot;80/250&quot;:[231,185],&quot;80/315&quot;:[225,213],&quot;100/200&quot;:[252,158],&quot;100/250&quot;:[252,180]}};
+var W=974,H=600,cv=document.getElementById(&#x27;c&#x27;),cx=cv.getContext(&#x27;2d&#x27;);
+var F=&#x27;&quot;IBM Plex Sans&quot;,&quot;Segoe UI&quot;,Arial,sans-serif&#x27;,MO=&#x27;&quot;IBM Plex Mono&quot;,Consolas,&quot;Courier New&quot;,monospace&#x27;;
+var BG=&#x27;#fbfaf6&#x27;,INK=&#x27;#13293d&#x27;,MU=&#x27;#4a5866&#x27;,LN=&#x27;#e3e6e2&#x27;,LN2=&#x27;#cfd5d1&#x27;,SUNK=&#x27;#eceeea&#x27;,AC=&#x27;#1f6b94&#x27;,AC2=&#x27;#a8501a&#x27;,HL1=&#x27;#2a78d6&#x27;,HL2=&#x27;#eb6834&#x27;;
+function size(){var d=window.devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;var k=Math.min(innerWidth/W,innerHeight/H);cx.setTransform(k*d,0,0,k*d,0,0)}
+size();addEventListener(&#x27;resize&#x27;,size);
+var X0=78,X1=628,Y0=24,Y1=520,U0=30.1,U1=269.9,V0=77.8,V1=220.4;
+function px(u){return X0+(X1-X0)*(u-U0)/(U1-U0)}function py(v){return Y1-(Y1-Y0)*(v-V0)/(V1-V0)}
+function lq(q){return 100*Math.log(q)/Math.LN10}
+function t(s,x,y,sz,c,al,w,f){cx.font=(w||400)+&#x27; &#x27;+sz+&#x27;px &#x27;+(f||F);cx.fillStyle=c;cx.textAlign=al||&#x27;left&#x27;;cx.fillText(s,x,y)}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function ease(x){return x&lt;0?0:x&gt;1?1:x*x*(3-2*x)}
+function poly(p){cx.beginPath();p.forEach(function(a,i){i?cx.lineTo(px(a[0]),py(a[1])):cx.moveTo(px(a[0]),py(a[1]))});cx.closePath()}
+function wrap(s,x,y,maxw,sz,c,lh,w){cx.font=(w||400)+&#x27; &#x27;+sz+&#x27;px &#x27;+F;var ws=s.split(&#x27; &#x27;),line=&#x27;&#x27;,yy=y;ws.forEach(function(wd){var tt=line?line+&#x27; &#x27;+wd:wd;if(cx.measureText(tt).width&gt;maxw&amp;&amp;line){t(line,x,yy,sz,c,&#x27;left&#x27;,w);line=wd;yy+=lh}else line=tt});if(line)t(line,x,yy,sz,c,&#x27;left&#x27;,w);return yy+lh}
+var STEPS=[
+ [&#x27;Dos ejes logarítmicos&#x27;,&#x27;Caudal Q en el eje horizontal y cabeza H en el vertical. De 10 a 20 m³/h hay la misma distancia que de 20 a 40: cada duplicación ocupa lo mismo.&#x27;],
+ [&#x27;Cada recuadro es un modelo&#x27;,&#x27;El recuadro marca la zona de Q y H que cubre ese modelo con sus distintos diámetros de impulsor. 32/125: descarga DN 32, impulsor nominal de 125 mm.&#x27;],
+ [&#x27;Ubicar el punto de diseño&#x27;,&#x27;Q = 16 m³/h y H = 19 m. Se sube desde el caudal y se cruza con la cabeza.&#x27;],
+ [&#x27;¿Qué recuadros lo contienen?&#x27;,&#x27;El punto cae donde se traslapan la 32/125 y la 32/125.1: son los candidatos. El siguiente paso es revisar la curva de cada uno.&#x27;],
+ [&#x27;Revisar la velocidad&#x27;,&#x27;Estas curvas son a 2900 rpm (50 Hz). Con motores a 60 Hz, unos 3500 rpm, se usan las curvas a 60 Hz o se corrige con las leyes de afinidad.&#x27;]];
+var SD=[4500,5500,4500,5500,5000],CYC=SD.reduce(function(a,b){return a+b},0);
+var T0=performance.now()-(parseInt((location.hash||&#x27;#0&#x27;).slice(1))||0),red=matchMedia(&#x27;(prefers-reduced-motion: reduce)&#x27;).matches;
+var QD=lq(16),HD=lq(19);
+function byName(n){for(var i=0;i&lt;D.tiles.length;i++)if(D.tiles[i].n===n)return D.tiles[i]}
+function frame(now){
+ var tm=red?CYC-800:Math.max(0,now-T0)%CYC,st=0,acc=0;while(tm&gt;=acc+SD[st]){acc+=SD[st];st++}var lt=tm-acc;
+ cx.fillStyle=BG;cx.fillRect(0,0,W,H);
+ // grid
+ [1,10,100,1000].forEach(function(dec){for(var m=1;m&lt;10;m++){var q=dec*m,u=lq(q);if(u&lt;U0-0.1||u&gt;U1+0.1)continue;cx.strokeStyle=m===1?LN2:LN;cx.lineWidth=1;cx.beginPath();cx.moveTo(px(u),Y0);cx.lineTo(px(u),Y1);cx.stroke()}});
+ [1,10,100].forEach(function(dec){for(var m=1;m&lt;10;m++){var h=dec*m,v=lq(h);if(v&lt;V0-0.1||v&gt;V1+0.1)continue;cx.strokeStyle=m===1?LN2:LN;cx.lineWidth=1;cx.beginPath();cx.moveTo(X0,py(v));cx.lineTo(X1,py(v));cx.stroke()}});
+ var axHL=st===0?ease(lt/600):0;
+ [2,5,10,20,50,100,200,500].forEach(function(q){t(String(q),px(lq(q)),Y1+28,20,axHL&gt;0?INK:MU,&#x27;center&#x27;,axHL&gt;0?600:400)});
+ [10,20,50,100,150].forEach(function(h){t(String(h),X0-10,py(lq(h))+7,20,axHL&gt;0?INK:MU,&#x27;right&#x27;,axHL&gt;0?600:400)});
+ t(&#x27;Caudal Q (m³/h)&#x27;,(X0+X1)/2,Y1+60,22,INK,&#x27;center&#x27;,600);t(&#x27;H (m)&#x27;,X0-10,Y0-4,20,INK,&#x27;right&#x27;,600);
+ // tiles
+ var ta=st===0?0:st===1?ease(lt/1500):1;
+ if(ta&gt;0){cx.save();D.tiles.forEach(function(tl,i){var a=st===1?Math.min(1,Math.max(0,(lt-i*45)/500)):1;cx.globalAlpha=a*((st&gt;=3)?((tl.n===&#x27;32/125&#x27;||tl.n===&#x27;32/125.1&#x27;)?1:0.35):1);poly(tl.p);cx.fillStyle=tl.c;cx.fill();cx.lineWidth=1.5;cx.strokeStyle=&#x27;#1d1d1b&#x27;;cx.stroke()});cx.restore();
+  cx.save();cx.font=&#x27;600 15px &#x27;+F;var boxes=[];var order=Object.keys(D.labels).sort(function(a,b){var ka=(a===&#x27;32/125&#x27;||a===&#x27;32/125.1&#x27;)?0:1,kb=(b===&#x27;32/125&#x27;||b===&#x27;32/125.1&#x27;)?0:1;return ka-kb});
+  order.forEach(function(n){var L=D.labels[n],x=px(L[0]),y=py(L[1]),w=cx.measureText(n).width+6,bx=[x-w/2,y-9,x+w/2,y+9];if(boxes.some(function(b){return bx[0]&lt;b[2]&amp;&amp;bx[2]&gt;b[0]&amp;&amp;bx[1]&lt;b[3]&amp;&amp;bx[3]&gt;b[1]}))return;boxes.push(bx);
+   var dim=st&gt;=3&amp;&amp;n!==&#x27;32/125&#x27;&amp;&amp;n!==&#x27;32/125.1&#x27;;var tl=byName(n);var dark=tl&amp;&amp;(tl.c===&#x27;#1d531f&#x27;||tl.c===&#x27;#416b39&#x27;||tl.c===&#x27;#638558&#x27;);cx.globalAlpha=ta*(dim?0.35:1);t(n,x,y+5,15,dark?&#x27;#f4f3ee&#x27;:INK,&#x27;center&#x27;,600)});cx.restore()}
+ // paso 1: escala log
+ if(st===0&amp;&amp;lt&gt;1200){var a=ease((lt-1200)/800),y=Y1-36;cx.save();cx.globalAlpha=a;[[10,20],[20,40]].forEach(function(r,i){var x1=px(lq(r[0])),x2=px(lq(r[1]));cx.strokeStyle=AC2;cx.lineWidth=3;cx.beginPath();cx.moveTo(x1,y-i*0);cx.lineTo(x2,y);cx.stroke();[x1,x2].forEach(function(x){cx.beginPath();cx.moveTo(x,y-8);cx.lineTo(x,y+8);cx.stroke()});t(&#x27;×2&#x27;,(x1+x2)/2,y-12,20,AC2,&#x27;center&#x27;,700)});cx.restore()}
+ // paso 2: resaltar 32/125
+ if(st===1&amp;&amp;lt&gt;2000){var tl=byName(&#x27;32/125&#x27;),a=ease((lt-2000)/700);cx.save();cx.globalAlpha=a;poly(tl.p);cx.lineWidth=5;cx.strokeStyle=AC;cx.stroke();
+  cx.fillStyle=AC;rr(px(lq(30))+16,py(lq(27))-20,96,32,8);cx.fill();t(&#x27;32/125&#x27;,px(lq(30))+64,py(lq(27))+3,20,BG,&#x27;center&#x27;,700);cx.restore()}
+ // paso 3-5: punto
+ if(st&gt;=2){var a=st===2?ease(lt/1500):1,b=st===2?ease((lt-1500)/1500):1;cx.save();cx.setLineDash([7,6]);cx.strokeStyle=INK;cx.lineWidth=2.5;
+  var yt=Y1+(py(HD)-Y1)*a;cx.beginPath();cx.moveTo(px(QD),Y1);cx.lineTo(px(QD),yt);cx.stroke();
+  if(b&gt;0){var xt=X0+(px(QD)-X0)*b;cx.beginPath();cx.moveTo(X0,py(HD));cx.lineTo(xt,py(HD));cx.stroke()}cx.restore();
+  if(b&gt;=1){cx.beginPath();cx.arc(px(QD),py(HD),12,0,7);cx.fillStyle=BG;cx.fill();cx.beginPath();cx.arc(px(QD),py(HD),9,0,7);cx.fillStyle=INK;cx.fill();
+   if(st===2){cx.fillStyle=INK;rr(px(QD)-74,py(HD)-62,148,36,8);cx.fill();t(&#x27;16 m³/h · 19 m&#x27;,px(QD),py(HD)-37,18,BG,&#x27;center&#x27;,600)}}}
+ if(st&gt;=3){var a=st===3?ease(lt/900):1;cx.save();cx.globalAlpha=a;[[&#x27;32/125&#x27;,HL1],[&#x27;32/125.1&#x27;,HL2]].forEach(function(r){poly(byName(r[0]).p);cx.lineWidth=5;cx.strokeStyle=r[1];cx.stroke()});cx.restore()}
+ // panel
+ var PX=652,PW=298,L=PX+22;cx.fillStyle=SUNK;rr(PX,24,PW,552,12);cx.fill();
+ t(&#x27;Paso &#x27;+(st+1)+&#x27; de 5&#x27;,L,62,20,MU);
+ var yy=wrap(STEPS[st][0],L,98,PW-44,26,INK,32,700);wrap(STEPS[st][1],L,yy+10,PW-44,22,INK,31);
+ if(st&gt;=3){var y2=440;cx.fillStyle=HL1;rr(L,y2-16,16,16,3);cx.fill();t(&#x27;32/125&#x27;,L+26,y2,22,INK,&#x27;left&#x27;,600);cx.fillStyle=HL2;rr(L,y2+20,16,16,3);cx.fill();t(&#x27;32/125.1&#x27;,L+26,y2+36,22,INK,&#x27;left&#x27;,600)}
+ t(&#x27;DAB KDN · 2900 rpm&#x27;,L,556,20,MU);
+ if(!red)requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);if(red)frame(0);
+})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: DAB Pumps, catálogo técnico serie KDN, tabla gráfica de selección a 2900 rpm (redibujada)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">20</p>
+</section>
+<section id="nomenclatura" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Ejemplo · Goulds</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">El código de Goulds dice bocas e impulsor</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px">
+    <div style="display:flex; flex-direction:column; gap:20px; flex:3">
+      <p style="padding:24px 32px; font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:120px; font-weight:600; line-height:1.1; text-align:center; color:#f4f3ee; background:#13293d; border-radius:12px"><span style="color:#7fc0e6">2</span> × <span style="color:#f0a46e">3</span> − 10</p>
+      <div style="display:flex; flex-direction:row; gap:20px; align-items:center; padding:20px 28px; background:#fbfaf6; border-left:6px solid #1f6b94; border-radius:12px">
+        <p style="width:96px; font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:48px; font-weight:600; color:#1f6b94">2</p>
+        <p style="font-size:28px; line-height:1.35; color:#13293d">Diámetro de la conexión de <b>descarga</b>: 2 pulgadas</p>
+      </div>
+      <div style="display:flex; flex-direction:row; gap:20px; align-items:center; padding:20px 28px; background:#fbfaf6; border-left:6px solid #a8501a; border-radius:12px">
+        <p style="width:96px; font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:48px; font-weight:600; color:#a8501a">3</p>
+        <p style="font-size:28px; line-height:1.35; color:#13293d">Diámetro de la conexión de <b>succión</b>: 3 pulgadas</p>
+      </div>
+      <div style="display:flex; flex-direction:row; gap:20px; align-items:center; padding:20px 28px; background:#fbfaf6; border-left:6px solid #13293d; border-radius:12px">
+        <p style="width:96px; font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:48px; font-weight:600; color:#13293d">10</p>
+        <p style="font-size:28px; line-height:1.35; color:#13293d">Admite impulsores de <b>hasta 10 pulgadas</b> de diámetro</p>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; flex:2; height:580px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/gerhart-partes.png" alt="Partes de una bomba centrífuga: impulsor, ojo, álabes y voluta" style="width:616px; height:546px; object-fit:contain"></div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: Gerhart, P., Gerhart, A. y Hochstein, J. (2016).</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">21</p>
+</section>
+<section id="sin-estandar" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Nomenclatura</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">No hay una nomenclatura estándar</h2>
+  </div>
+  <p style="font-size:30px; line-height:1.4; color:#4a5866">El mismo tipo de código significa cosas distintas según el fabricante:</p>
+  <div style="display:flex; flex-direction:row; gap:28px">
+    <div style="display:flex; flex-direction:column; gap:16px; flex:1; padding:32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+      <p style="font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#1f6b94">Goulds</p>
+      <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:64px; font-weight:600; line-height:1.1; color:#13293d">2 × 3 − 10</p>
+      <p style="font-size:26px; line-height:1.4; color:#4a5866"><b>descarga × succión − impulsor máximo</b>, en pulgadas</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px; flex:1; padding:32px; background:#fbfaf6; border-top:6px solid #a8501a; border-radius:12px">
+      <p style="font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#a8501a">Griswold</p>
+      <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:64px; font-weight:600; line-height:1.1; color:#13293d">4 × 3 − 10</p>
+      <p style="font-size:26px; line-height:1.4; color:#4a5866"><b>succión × descarga − impulsor</b>, en pulgadas</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px; flex:1; padding:32px; background:#fbfaf6; border-top:6px solid #13293d; border-radius:12px">
+      <p style="font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#13293d">DAB KDN (EN 733)</p>
+      <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:64px; font-weight:600; line-height:1.1; color:#13293d">32-125</p>
+      <p style="font-size:26px; line-height:1.4; color:#4a5866"><b>DN de descarga − tamaño nominal del impulsor</b>, en mm. La 32-125 admite hasta Ø142 mm.</p>
+    </div>
+  </div>
+  <p style="padding:20px 32px; font-size:30px; font-weight:500; line-height:1.4; color:#f4f3ee; background:#13293d; border-radius:12px">Antes de interpretar un código, <span style="color:#f0a46e">revise el manual o catálogo del fabricante.</span></p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">22</p>
+</section>
+<section id="curva-modelo" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:16px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Del diagrama de familia al modelo · KDN 32/125.1</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">La curva del modelo en particular</h2>
+    <p style="font-size:30px; line-height:1.35; color:#4a5866">Al seleccionar preliminarmente la bomba, <b style="color:#13293d">se busca la curva característica del modelo en particular.</b></p>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:56px; justify-content:center">
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <p style="font-size:26px; font-weight:600; color:#1f6b94">Cabeza y eficiencia · diámetro de impulsor</p>
+      <img src="img/kdn-32-125-1-cabeza.png" alt="Curvas H–Q por diámetro de impulsor con líneas de isoeficiencia, KDN 32/125.1" style="width:673px; height:521px; object-fit:contain; border-radius:8px">
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <p style="font-size:26px; font-weight:600; color:#a8501a">NPSH requerido</p>
+      <img src="img/kdn-32-125-1-npsh.png" alt="Curvas de NPSH requerido para Ø105 y Ø140, KDN 32/125.1" style="width:690px; height:159px; object-fit:contain; border-radius:8px">
+      <p style="padding:20px 0 0 0; font-size:26px; font-weight:600; color:#13293d">Potencia en el eje</p>
+      <img src="img/kdn-32-125-1-potencia.png" alt="Curvas de potencia en el eje por diámetro de impulsor, KDN 32/125.1" style="width:690px; height:299px; object-fit:contain; border-radius:8px">
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: DAB Pumps, catálogo técnico serie KDN, hoja KDN 32-125.1 a 2900 rpm (50 Hz)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">23</p>
+</section>
+<section id="velocidad-diametro" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Ejemplo · Griswold 4 × 3 − 10 A70</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Al duplicar la velocidad, Q se duplica y H se cuadruplica</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px">
+    <img src="img/griswold-3600.png" alt="Griswold 4×3−10 A70 a 3600 rpm" style="width:590px; height:532px; object-fit:contain; background:#ffffff; border-radius:12px"><img src="img/griswold-1800.png" alt="Griswold 4×3−10 A70 a 1800 rpm" style="width:590px; height:532px; object-fit:contain; background:#ffffff; border-radius:12px">
+    <div style="display:flex; flex-direction:column; gap:16px; flex:1; padding:28px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+      <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Qué observar</h3>
+      <div style="display:flex; flex-direction:row; gap:16px">
+        <p style="width:28px; font-size:26px; font-weight:600; color:#a8501a">1</p>
+        <p style="font-size:26px; line-height:1.3; color:#13293d">Una curva <i>H</i>–<i>Q</i> por cada diámetro</p>
+      </div>
+      <div style="display:flex; flex-direction:row; gap:16px">
+        <p style="width:28px; font-size:26px; font-weight:600; color:#a8501a">2</p>
+        <p style="font-size:26px; line-height:1.3; color:#13293d">Las líneas de eficiencia</p>
+      </div>
+      <div style="display:flex; flex-direction:row; gap:16px">
+        <p style="width:28px; font-size:26px; font-weight:600; color:#a8501a">3</p>
+        <p style="font-size:26px; line-height:1.3; color:#13293d">La curva de NPSH requerido, abajo</p>
+      </div>
+      <div style="display:flex; flex-direction:row; gap:16px">
+        <p style="width:28px; font-size:26px; font-weight:600; color:#a8501a">4</p>
+        <p style="font-size:26px; line-height:1.3; color:#13293d">Cómo cambia todo al duplicar la velocidad</p>
+      </div>
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1400px; font-size:24px; color:#6b7884">Curvas: Griswold Pumps, modelo 4 × 3 − 10 A70, curvas G-3613 (3600 rpm) y G-1813 (1800 rpm).</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">24</p>
+</section>
+<section id="npsh-detalle" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Ejemplo · Griswold 4 × 3 − 10 A70</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Más caudal, más NPSH requerido</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px">
+    <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; flex:3; height:580px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/griswold-npsh.png" alt="Curvas de NPSH requerido de la Griswold 4×3−10 A70 a 3600 y 1800 rpm" style="width:940px; height:546px; object-fit:contain"></div>
+    <div style="display:flex; flex-direction:column; gap:20px; flex:2">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Velocidad de flujo</h3>
+        <p style="font-size:28px; line-height:1.4; color:#4a5866">Más velocidad en el ojo del impulsor, más energía cinética.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#fbfaf6; border-top:6px solid #a8501a; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#a8501a">Presión local</h3>
+        <p style="font-size:28px; line-height:1.4; color:#4a5866">Esa energía sale de la presión: baja la presión local y hace falta más NPSH para no cavitar.</p>
+      </div>
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1400px; font-size:24px; color:#6b7884">Curvas: Griswold Pumps, modelo 4 × 3 − 10 A70, curvas G-3613 (3600 rpm) y G-1813 (1800 rpm).</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">25</p>
+</section>
+<section id="npsh-regla" data-transition="fade" style="display:flex; flex-direction:column; gap:48px; justify-content:center; padding:128px; background:#1f6b94; font-family:'IBM Plex Sans', Arial, sans-serif">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#f4f3ee">Para un mismo caudal</p>
+  <div style="display:flex; flex-direction:column; gap:32px">
+    <h1 style="width:1600px; font-family:'Source Serif 4', Georgia, serif; font-size:88px; font-weight:600; line-height:1.15; color:#f4f3ee">Menor diámetro del impulsor, mayor <span style="color:#ffd3b0">NPSH requerido</span></h1>
+    <h1 style="width:1600px; font-family:'Source Serif 4', Georgia, serif; font-size:88px; font-weight:600; line-height:1.15; color:#f4f3ee">Mayor velocidad del impulsor, mayor <span style="color:#ffd3b0">NPSH requerido</span></h1>
+  </div>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#dce9f1">26</p>
+</section>
+<section id="sec-seleccion" data-transition="fade" style="display:flex; flex-direction:column; gap:40px; justify-content:center; padding:128px; background:#13293d; font-family:'IBM Plex Sans', Arial, sans-serif">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#f0a46e">Parte 5 de 6 · Ejemplo guiado</p>
+  <h1 style="width:1500px; font-family:'Source Serif 4', Georgia, serif; font-size:112px; font-weight:600; line-height:1.05; color:#f4f3ee">¿Cuál bomba compramos?</h1>
+  <p style="width:1300px; font-size:40px; line-height:1.3; color:#bcd0dc">El reto del inicio, paso a paso con el catálogo DAB KDN</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#8a9aa8">27</p>
+</section>
+<section id="condiciones" data-transition="fade" style="display:flex; flex-direction:column; gap:40px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Ejemplo guiado</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">El reto: 16 m³/h a 19 m</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:32px">
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:40px; background:#13293d; border-radius:12px">
+      <p style="font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#f0a46e">Caudal</p>
+      <p style="font-family:'Source Serif 4', Georgia, serif; font-size:120px; font-weight:700; line-height:1.05; color:#f4f3ee">16 <span style="color:#bcd0dc">m³/h</span></p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:40px; background:#13293d; border-radius:12px">
+      <p style="font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#f0a46e">Cabeza total</p>
+      <p style="font-family:'Source Serif 4', Georgia, serif; font-size:120px; font-weight:700; line-height:1.05; color:#f4f3ee">19 <span style="color:#bcd0dc">m</span></p>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:column; gap:16px">
+    <p style="font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#4a5866">La ruta del ejemplo</p>
+    <div style="display:flex; flex-direction:row; gap:12px">
+      <p style="flex:1; padding:16px 20px; font-size:24px; line-height:1.3; color:#13293d; background:#fbfaf6; border-top:4px solid #1f6b94; border-radius:8px"><b>1</b> Familia</p>
+      <p style="flex:1; padding:16px 20px; font-size:24px; line-height:1.3; color:#13293d; background:#fbfaf6; border-top:4px solid #1f6b94; border-radius:8px"><b>2</b> 32/125.1</p>
+      <p style="flex:1; padding:16px 20px; font-size:24px; line-height:1.3; color:#13293d; background:#fbfaf6; border-top:4px solid #1f6b94; border-radius:8px"><b>3</b> 32/125</p>
+      <p style="flex:1; padding:16px 20px; font-size:24px; line-height:1.3; color:#13293d; background:#fbfaf6; border-top:4px solid #1f6b94; border-radius:8px"><b>4</b> NPSH y potencia</p>
+      <p style="flex:1; padding:16px 20px; font-size:24px; line-height:1.3; color:#13293d; background:#fbfaf6; border-top:4px solid #a8501a; border-radius:8px"><b>5</b> Digitalizar</p>
+      <p style="flex:1; padding:16px 20px; font-size:24px; line-height:1.3; color:#13293d; background:#fbfaf6; border-top:4px solid #a8501a; border-radius:8px"><b>6</b> Interpolar</p>
+      <p style="flex:1; padding:16px 20px; font-size:24px; line-height:1.3; color:#13293d; background:#fbfaf6; border-top:4px solid #a8501a; border-radius:8px"><b>7</b> Motor</p>
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: DAB Pumps, catálogo técnico serie KDN, curvas a 2900 rpm (50 Hz)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">28</p>
+</section>
+<section id="familia" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Paso 1 de 7 · Diagrama de familia</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">¿Qué modelos cubren el punto?</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px">
+    <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; flex:3; height:600px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/kdn-familia.png" alt="Diagrama de familia DAB KDN a 2900 rpm" style="width:940px; height:566px; object-fit:contain"></div>
+    <div style="display:flex; flex-direction:column; gap:20px; flex:2">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Ubicar el punto</h3>
+        <p style="font-size:28px; line-height:1.4; color:#4a5866"><i>Q</i> = 16 m³/h y <i>H</i> = 19 m sobre el diagrama.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#13293d; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#f0a46e">Candidatos</h3>
+        <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:36px; font-weight:600; line-height:1.4; color:#f4f3ee">32/125.1</p>
+        <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:36px; font-weight:600; line-height:1.4; color:#f4f3ee">32/125</p>
+      </div>
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: DAB Pumps, catálogo técnico serie KDN, curvas a 2900 rpm (50 Hz)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">29</p>
+</section>
+<section id="curva-125-1" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Paso 2 de 7 · Primer candidato</p>
+    <h2 style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">KDN 32/125.1</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; justify-content:end">
+    <div style="display:flex; flex-direction:column; gap:16px; width:650px; flex:none; padding:32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+      <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Leer en el punto de diseño</h3>
+      <div style="display:flex; flex-direction:row; gap:16px">
+        <p style="width:40px; font-size:28px; font-weight:600; color:#a8501a">1</p>
+        <p style="font-size:28px; line-height:1.35; color:#13293d">Diámetro graficado que cubre el punto</p>
+      </div>
+      <div style="display:flex; flex-direction:row; gap:16px">
+        <p style="width:40px; font-size:28px; font-weight:600; color:#a8501a">2</p>
+        <p style="font-size:28px; line-height:1.35; color:#13293d">Eficiencia en ese punto</p>
+      </div>
+      <div style="display:flex; flex-direction:row; gap:16px">
+        <p style="width:40px; font-size:28px; font-weight:600; color:#a8501a">3</p>
+        <p style="font-size:28px; line-height:1.35; color:#13293d">Caudal en el BEP de ese diámetro, para comparar con el otro candidato</p>
+      </div>
+    </div>
+  </div>
+  <img src="img/kdn-32-125-1-hq.png" alt="Curvas H–Q e isoeficiencia de la KDN 32/125.1" style="position:absolute; left:128px; top:302px; width:974px; height:600px; object-fit:contain; background:#ffffff; border-radius:12px">
+  <img src="img/kdn-32-125-1-hq-marcas.png" alt="Curvas H–Q e isoeficiencia de la KDN 32/125.1, con las lecturas marcadas" data-build-in="fade" style="position:absolute; left:128px; top:302px; width:974px; height:600px; object-fit:contain; background:#ffffff; border-radius:12px">
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: DAB Pumps, catálogo técnico serie KDN, curvas a 2900 rpm (50 Hz)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">30</p>
+</section>
+<section id="curva-125" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Paso 3 de 7 · Segundo candidato y criterio</p>
+    <h2 style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">KDN 32/125</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; justify-content:end">
+    <div style="display:flex; flex-direction:column; gap:20px; width:650px; flex:none">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Mismo ejercicio</h3>
+        <p style="font-size:28px; line-height:1.4; color:#4a5866">Diámetro graficado, eficiencia y caudal en el BEP, en <i>Q</i> = 16 m³/h, <i>H</i> = 19 m.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#13293d; border-radius:12px">
+        <div style="display:flex; flex-direction:row; gap:12px; align-items:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#f0a46e; width:40px; height:40px" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <h3 style="font-size:32px; font-weight:600; color:#f0a46e">Criterio</h3>
+        </div>
+        <p style="font-size:28px; line-height:1.4; color:#f4f3ee">Se elige la <b>32/125.1</b>: su caudal de operación está más cerca del caudal en el BEP (82 % frente a 67 %).</p>
+      </div>
+    </div>
+  </div>
+  <img src="img/kdn-32-125-hq.png" alt="Curvas H–Q e isoeficiencia de la KDN 32/125" style="position:absolute; left:128px; top:302px; width:974px; height:600px; object-fit:contain; background:#ffffff; border-radius:12px">
+  <img src="img/kdn-32-125-hq-marcas.png" alt="Curvas H–Q e isoeficiencia de la KDN 32/125, con las lecturas marcadas" data-build-in="fade" style="position:absolute; left:128px; top:302px; width:974px; height:600px; object-fit:contain; background:#ffffff; border-radius:12px">
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: DAB Pumps, catálogo técnico serie KDN, curvas a 2900 rpm (50 Hz)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">31</p>
+</section>
+<section id="npsh-potencia" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Paso 4 de 7 · KDN 32/125.1</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">El Ø130 no tiene curva de NPSH propia</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px; justify-content:end">
+    <div style="display:flex; flex-direction:column; gap:20px; width:650px; flex:none">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">El problema</h3>
+        <p style="font-size:28px; line-height:1.4; color:#4a5866">El impulsor elegido, <b>Ø130 mm</b>, tiene curva de potencia pero no de NPSH: la hoja solo da Ø105 y Ø140 mm.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#13293d; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#f0a46e">La salida</h3>
+        <p style="font-size:28px; line-height:1.4; color:#f4f3ee">Digitalizar las dos curvas de NPSH e interpolar.</p>
+      </div>
+    </div>
+  </div>
+  <img src="img/kdn-32-125-1-npsh-potencia.png" alt="Curvas de NPSH requerido y potencia de la KDN 32/125.1" style="position:absolute; left:128px; top:302px; width:974px; height:600px; object-fit:contain; background:#ffffff; border-radius:12px">
+  <img src="img/kdn-32-125-1-npsh-potencia-marcas.png" alt="Curvas de NPSH requerido y potencia de la KDN 32/125.1, con las lecturas marcadas" data-build-in="fade" style="position:absolute; left:128px; top:302px; width:974px; height:600px; object-fit:contain; background:#ffffff; border-radius:12px">
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: DAB Pumps, catálogo técnico serie KDN, curvas a 2900 rpm (50 Hz)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">32</p>
+</section>
+<section id="npsh-tablas" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Paso 5 de 7 · Digitalizar</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Cinco puntos alrededor de 16 m³/h bastan</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:48px">
+    <div style="display:flex; flex-direction:column; gap:12px; flex:1">
+      <p style="font-size:32px; font-weight:600; color:#1f6b94">Ø105 mm</p>
+      <table style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:28px; color:#13293d; background:#fbfaf6">
+        <tr style="background:#13293d"><th style="width:50%; text-align:right; color:#f4f3ee; padding:10px 24px">Q (m³/h)</th><th style="width:50%; text-align:right; color:#f4f3ee">NPSH_R (m)</th></tr>
+        <tr><td style="text-align:right">14,0</td><td style="text-align:right">0,914</td></tr>
+        <tr style="background:#eceeea"><td style="text-align:right">15,2</td><td style="text-align:right">0,983</td></tr>
+        <tr><td style="text-align:right">16,0</td><td style="text-align:right">1,05</td></tr>
+        <tr style="background:#eceeea"><td style="text-align:right">17,0</td><td style="text-align:right">1,17</td></tr>
+        <tr><td style="text-align:right">18,0</td><td style="text-align:right">1,30</td></tr>
+      </table>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; flex:1">
+      <p style="font-size:32px; font-weight:600; color:#a8501a">Ø140 mm</p>
+      <table style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:28px; color:#13293d; background:#fbfaf6">
+        <tr style="background:#13293d"><th style="width:50%; text-align:right; color:#f4f3ee; padding:10px 24px">Q (m³/h)</th><th style="width:50%; text-align:right; color:#f4f3ee">NPSH_R (m)</th></tr>
+        <tr><td style="text-align:right">14,0</td><td style="text-align:right">0,754</td></tr>
+        <tr style="background:#eceeea"><td style="text-align:right">15,2</td><td style="text-align:right">0,777</td></tr>
+        <tr><td style="text-align:right">16,0</td><td style="text-align:right">0,800</td></tr>
+        <tr style="background:#eceeea"><td style="text-align:right">17,0</td><td style="text-align:right">0,834</td></tr>
+        <tr><td style="text-align:right">18,0</td><td style="text-align:right">0,880</td></tr>
+      </table>
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1400px; font-size:24px; color:#6b7884">Curvas: DAB Pumps, catálogo KDN, 2900 rpm (50 Hz). Puntos digitalizados con ScanIt, KDN 32/125.1.</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">33</p>
+</section>
+<section id="interpolacion" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Paso 6 de 7 · Interpolar</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Se interpola en el diámetro, al mismo caudal</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px">
+    <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:16px; flex:3; height:600px; padding:16px; background:#ffffff; border:1px solid #dfe2dd; border-radius:12px"><img src="img/interpolador-npsh.png" alt="Gráfica del Interpolador de curvas: NPSH requerido de Ø105 y Ø140, y el Ø130 interpolado a 16 m³/h" style="width:940px; height:566px; object-fit:contain"></div>
+    <div style="display:flex; flex-direction:column; gap:20px; flex:2">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
+        <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Entradas</h3>
+        <p style="font-size:28px; line-height:1.4; color:#4a5866">Los puntos digitalizados de Ø105 y Ø140 mm, y el diámetro objetivo.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; padding:32px; background:#13293d; border-radius:12px">
+        <p style="font-size:24px; letter-spacing:3px; text-transform:uppercase; color:#f0a46e">Ø130 mm a 16 m³/h</p>
+        <p style="font-family:'Source Serif 4', Georgia, serif; font-size:96px; font-weight:700; line-height:1.05; color:#f4f3ee">≈ 0,87 m</p>
+        <p style="font-size:26px; line-height:1.4; color:#bcd0dc">NPSH requerido</p>
+      </div>
+    </div>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Datos: DAB Pumps, catálogo técnico serie KDN, 2900 rpm (50 Hz)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">34</p>
+</section>
+<section id="pregunta-motor" data-transition="fade" style="display:flex; flex-direction:column; gap:56px; justify-content:center; padding:128px 128px 160px; background:#a8501a; font-family:'IBM Plex Sans', Arial, sans-serif; color:#f4f3ee">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#ffd3b0">Antes de elegir el motor</p>
+  <h1 style="width:1600px; font-family:'Source Serif 4', Georgia, serif; font-size:80px; font-weight:600; line-height:1.15; color:#f4f3ee">En el punto de diseño, la bomba consume 1,43 kW. ¿Alcanza un motor de 1,5 kW?</h1>
+  <div style="display:flex; flex-direction:row; gap:32px"><div style="display:flex; flex-direction:row; gap:24px; align-items:center; flex:1; padding:32px 40px; background:#8f4314; border-radius:16px"><p style="width:64px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:700; line-height:1; color:#ffd3b0">A</p><p style="font-size:40px; font-weight:500; line-height:1.25; color:#f4f3ee">Sí, sobra un 5 %</p></div><div style="display:flex; flex-direction:row; gap:24px; align-items:center; flex:1; padding:32px 40px; background:#8f4314; border-radius:16px"><p style="width:64px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:700; line-height:1; color:#ffd3b0">B</p><p style="font-size:40px; font-weight:500; line-height:1.25; color:#f4f3ee">No</p></div><div style="display:flex; flex-direction:row; gap:24px; align-items:center; flex:1; padding:32px 40px; background:#8f4314; border-radius:16px"><p style="width:64px; font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:700; line-height:1; color:#ffd3b0">C</p><p style="font-size:40px; font-weight:500; line-height:1.25; color:#f4f3ee">Depende</p></div></div>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#ffd3b0">35</p>
+</section>
+<section id="motor" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Paso 7 de 7 · Motor</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">El motor se elige con el final de la curva</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:40px">
+    <div style="display:flex; flex-direction:column; gap:12px; flex:3">
+      <p style="font-size:26px; color:#4a5866">Alimentación 3 × 230-400 V, 50 Hz</p>
+      <table style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:28px; color:#13293d; background:#fbfaf6">
+        <tr style="background:#13293d"><th style="width:34%; text-align:right; color:#f4f3ee; padding:10px 24px">Potencia (kW)</th><th style="width:33%; color:#f4f3ee">Carcasa</th><th style="width:33%; color:#f4f3ee">Selección</th></tr>
+        <tr><td style="text-align:right">0,75</td><td>MEC 80</td><td></td></tr>
+        <tr style="background:#eceeea"><td style="text-align:right">1,1</td><td>MEC 80</td><td></td></tr>
+        <tr><td style="text-align:right">1,5</td><td>MEC 90S</td><td></td></tr>
+        <tr style="background:#d3e4ee"><td style="text-align:right; color:#1f6b94">2,2</td><td style="color:#1f6b94">MEC 90L</td><td style="color:#1f6b94">Seleccionado</td></tr>
+        <tr><td style="text-align:right">3,0</td><td>MEC 100L</td><td></td></tr>
+        <tr style="background:#eceeea"><td style="text-align:right">4,0</td><td>MEC 112M</td><td></td></tr>
+      </table>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; flex:2; padding:32px; background:#fbfaf6; border-top:6px solid #a8501a; border-radius:12px">
+      <h3 style="font-size:32px; font-weight:600; color:#a8501a">Conexiones</h3>
+      <div style="display:flex; flex-direction:row; gap:16px; align-items:center">
+        <p style="width:170px; font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:36px; font-weight:600; color:#13293d">DNA 50</p>
+        <p style="font-size:26px; line-height:1.35; color:#4a5866">succión</p>
+      </div>
+      <div style="display:flex; flex-direction:row; gap:16px; align-items:center">
+        <p style="width:170px; font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:36px; font-weight:600; color:#13293d">DNM 32</p>
+        <p style="font-size:26px; line-height:1.35; color:#4a5866">descarga</p>
+      </div>
+      <p style="font-size:24px; line-height:1.4; color:#4a5866">El 32 del código es la descarga.</p>
+    </div>
+  </div>
+  <p style="padding:20px 32px; font-size:30px; font-weight:500; line-height:1.4; color:#f4f3ee; background:#13293d; border-radius:12px">Se elige el <b>MEC 90L (2,2 kW)</b>: <span style="color:#f0a46e">la curva Ø130 llega a 1,67 kW al final; con 1,5 kW se sobrecargaría.</span></p>
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Fuente: DAB Pumps, catálogo técnico serie KDN (datos eléctricos a 50 Hz)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">36</p>
+</section>
+<section id="sec-grupos" data-transition="fade" style="display:flex; flex-direction:column; gap:40px; justify-content:center; padding:128px; background:#13293d; font-family:'IBM Plex Sans', Arial, sans-serif">
+  <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#f0a46e">Parte 6 de 6 · Trabajo en clase</p>
+  <h1 style="width:1500px; font-family:'Source Serif 4', Georgia, serif; font-size:112px; font-weight:600; line-height:1.05; color:#f4f3ee">Ahora les toca a ustedes</h1>
+  <p style="width:1300px; font-size:40px; line-height:1.3; color:#bcd0dc">Trabajo en grupos: seis casos con el mismo catálogo</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#8a9aa8">37</p>
+</section>
+<section id="instrucciones" data-transition="fade" style="display:flex; flex-direction:column; gap:24px; padding:128px 128px 160px; background:#f4f3ee">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Trabajo en grupos</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Instrucciones</h2>
+  </div>
+  <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:30px; line-height:1.4; color:#4a5866">Para cada uno de los 6 casos, use las curvas de rendimiento DAB KDN (2900 rpm) y reporte:</p>
+  <div style="display:grid; gap:20px; grid-template-columns:1fr 1fr">
+    <div style="display:flex; flex-direction:row; gap:24px; align-items:center; padding:24px 28px; background:#fbfaf6; border-radius:12px">
+      <p style="width:64px; height:64px; font-family:'IBM Plex Sans', Arial, sans-serif; font-size:32px; font-weight:600; line-height:2; text-align:center; color:#f4f3ee; background:#1f6b94; border-radius:256px">1</p>
+      <div style="display:flex; flex-direction:column; gap:4px; flex:1">
+        <h3 style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:32px; font-weight:600; color:#13293d">Modelo de la bomba</h3>
+        <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:26px; line-height:1.35; color:#4a5866">Ej.: KDN 40-250</p>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:row; gap:24px; align-items:center; padding:24px 28px; background:#fbfaf6; border-radius:12px">
+      <p style="width:64px; height:64px; font-family:'IBM Plex Sans', Arial, sans-serif; font-size:32px; font-weight:600; line-height:2; text-align:center; color:#f4f3ee; background:#1f6b94; border-radius:256px">2</p>
+      <div style="display:flex; flex-direction:column; gap:4px; flex:1">
+        <h3 style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:32px; font-weight:600; color:#13293d">Diámetro del impulsor</h3>
+        <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:26px; line-height:1.35; color:#4a5866">Ej.: Ø245 mm</p>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:row; gap:24px; align-items:center; padding:24px 28px; background:#fbfaf6; border-radius:12px">
+      <p style="width:64px; height:64px; font-family:'IBM Plex Sans', Arial, sans-serif; font-size:32px; font-weight:600; line-height:2; text-align:center; color:#f4f3ee; background:#a8501a; border-radius:256px">3</p>
+      <div style="display:flex; flex-direction:column; gap:4px; flex:1">
+        <h3 style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:32px; font-weight:600; color:#13293d">NPSH requerido</h3>
+        <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:26px; line-height:1.35; color:#4a5866">Leído de la curva, en metros</p>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:row; gap:24px; align-items:center; padding:24px 28px; background:#fbfaf6; border-radius:12px">
+      <p style="width:64px; height:64px; font-family:'IBM Plex Sans', Arial, sans-serif; font-size:32px; font-weight:600; line-height:2; text-align:center; color:#f4f3ee; background:#a8501a; border-radius:256px">4</p>
+      <div style="display:flex; flex-direction:column; gap:4px; flex:1">
+        <h3 style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:32px; font-weight:600; color:#13293d">Potencia y motor comercial</h3>
+        <p style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:26px; line-height:1.35; color:#4a5866">Potencia absorbida (kW) y carcasa. Ej.: 11 kW, MEC 160M</p>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:20px">
+    <p style="flex:1; padding:20px 28px; font-family:'IBM Plex Sans', Arial, sans-serif; font-size:28px; line-height:1.4; color:#f4f3ee; background:#13293d; border-radius:12px"><span style="color:#f0a46e">Si más de un modelo cubre el punto,</span> elija el que opere más cerca de su caudal en el BEP.</p>
+    <p style="flex:1; padding:20px 28px; font-family:'IBM Plex Sans', Arial, sans-serif; font-size:28px; line-height:1.4; color:#f4f3ee; background:#13293d; border-radius:12px"><span style="color:#f0a46e">El motor</span> debe cubrir la potencia al final de la curva del impulsor, no solo la del punto de diseño.</p>
+  </div>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-family:'IBM Plex Sans', Arial, sans-serif; font-size:24px; text-align:right; color:#6b7884">38</p>
+</section>
+<section id="casos" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:128px 128px 160px; background:#f4f3ee; font-family:'IBM Plex Sans', Arial, sans-serif; color:#13293d">
+  <div style="display:flex; flex-direction:column; gap:24px">
+    <p style="font-size:28px; letter-spacing:4px; text-transform:uppercase; color:#a8501a">Trabajo en grupos</p>
+    <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:72px; font-weight:600; line-height:1.1; color:#13293d">Matriz de casos</h2>
+  </div>
+  <div style="display:flex; flex-direction:column; gap:0px">
+    <div style="display:flex; flex-direction:row">
+      <p style="width:36%; padding:12px 20px; font-size:24px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#f4f3ee; background:#4a5866">Datos de entrada</p>
+      <p style="width:64%; padding:12px 20px; font-size:24px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#f4f3ee; background:#1f6b94">Entregables: complete cada casilla</p>
+    </div>
+    <table style="font-family:'IBM Plex Sans', Arial, sans-serif; font-size:30px; color:#13293d; background:#fbfaf6">
+      <tr style="background:#13293d"><th style="width:10%; text-align:center; color:#f4f3ee; padding:12px 20px">Caso</th><th style="width:14%; text-align:right; color:#f4f3ee">Q (m³/h)</th><th style="width:12%; text-align:right; color:#f4f3ee">H (m)</th><th style="width:18%; color:#f4f3ee">Modelo</th><th style="width:16%; color:#f4f3ee">Impulsor (mm)</th><th style="width:15%; color:#f4f3ee">NPSH_R (m)</th><th style="width:15%; color:#f4f3ee">Motor</th></tr>
+      <tr><td style="text-align:center">1</td><td style="text-align:right">15</td><td style="text-align:right">34</td><td></td><td></td><td></td><td></td></tr>
+      <tr style="background:#eceeea"><td style="text-align:center">2</td><td style="text-align:right">30</td><td style="text-align:right">45</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td style="text-align:center">3</td><td style="text-align:right">60</td><td style="text-align:right">28</td><td></td><td></td><td></td><td></td></tr>
+      <tr style="background:#eceeea"><td style="text-align:center">4</td><td style="text-align:right">80</td><td style="text-align:right">45</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td style="text-align:center">5</td><td style="text-align:right">80</td><td style="text-align:right">20</td><td></td><td></td><td></td><td></td></tr>
+      <tr style="background:#eceeea"><td style="text-align:center">6</td><td style="text-align:right">100</td><td style="text-align:right">70</td><td></td><td></td><td></td><td></td></tr>
+    </table>
+  </div>
+  <p style="position:absolute; left:128px; bottom:64px; width:1300px; font-size:24px; color:#6b7884">Catálogo: DAB Pumps, serie KDN, curvas a 2900 rpm (50 Hz)</p>
+  <p style="position:absolute; right:128px; bottom:64px; width:120px; font-size:24px; text-align:right; color:#6b7884">39</p>
+</section>
+</div>
+
+<div class="help" id="help" hidden><div>
+<b>Teclas</b><br>
+<kbd>→</kbd> <kbd>Espacio</kbd> <kbd>Av Pág</kbd> siguiente (también revela las marcas pendientes)<br>
+<kbd>←</kbd> <kbd>Re Pág</kbd> anterior<br>
+<kbd>Inicio</kbd> / <kbd>Fin</kbd> primera / última<br>
+<kbd>F</kbd> pantalla completa · <kbd>?</kbd> esta ayuda<br>
+Clic en el tercio izquierdo retrocede; en el resto avanza.
+</div></div>
+<div class="bar" id="bar">
+<button type="button" id="b-prev" aria-label="Anterior">←</button><span class="n" id="count"></span><button type="button" id="b-next" aria-label="Siguiente">→</button>
+<button type="button" id="b-full">Pantalla completa</button><button type="button" id="b-help" aria-label="Ayuda">?</button>
+</div>
+<script>
+(function(){
+var stage=document.getElementById('stage'),S=[].slice.call(stage.children),cur=0,step=0;
+function fit(){var k=Math.min(innerWidth/1920,innerHeight/1080);stage.style.transform='scale('+k+')';stage.style.left=((innerWidth-1920*k)/2)+'px';stage.style.top=((innerHeight-1080*k)/2)+'px'}
+addEventListener('resize',fit);fit();
+function builds(i){return [].slice.call(S[i].querySelectorAll('[data-build-in]'))}
+function title(i){var h=S[i].querySelector('h1,h2');return h?h.textContent.trim():''}
+function show(i,st){
+  i=Math.max(0,Math.min(S.length-1,i));
+  S.forEach(function(s,k){var on=k===i;s.classList.toggle('on',on);s.setAttribute('aria-hidden',on?'false':'true');
+    [].slice.call(s.querySelectorAll('iframe.emb')).forEach(function(f){if(on){if(!f.getAttribute('srcdoc'))f.srcdoc=f.dataset.doc}else if(f.getAttribute('srcdoc')){f.removeAttribute('srcdoc');f.src='about:blank'}})});
+  cur=i;var b=builds(i);step=st==null?0:Math.min(st,b.length);
+  b.forEach(function(e,k){e.classList.toggle('pending',k>=step)});
+  document.getElementById('count').textContent=(i+1)+' / '+S.length;
+  var a=S[i].querySelector('aside'),nh=document.getElementById('notes-h');if(nh){nh.textContent='Diapositiva '+(i+1)+' · '+title(i);document.getElementById('notes-t').textContent=a?a.textContent:'Sin notas.'}
+  if(location.hash!=='#'+(i+1))history.replaceState(null,'','#'+(i+1));
+}
+function next(){var b=builds(cur);if(step<b.length){b[step].classList.remove('pending');step++}else if(cur<S.length-1)show(cur+1)}
+function prev(){if(step>0){step--;builds(cur)[step].classList.add('pending')}else if(cur>0)show(cur-1,99)}
+function toggle(id){var e=document.getElementById(id);e.hidden=!e.hidden}
+function full(){if(document.fullscreenElement)document.exitFullscreen();else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){})}
+addEventListener('keydown',function(e){if(e.altKey||e.ctrlKey||e.metaKey)return;var k=e.key;
+  if(k==='ArrowRight'||k==='PageDown'||k===' '||k==='Enter'){e.preventDefault();next()}
+  else if(k==='ArrowLeft'||k==='PageUp'||k==='Backspace'){e.preventDefault();prev()}
+  else if(k==='Home')show(0);else if(k==='End')show(S.length-1);
+  else if((k==='n'||k==='N')&&document.getElementById('notes'))toggle('notes');else if(k==='f'||k==='F')full();else if(k==='?')toggle('help');else if(k==='Escape'){document.getElementById('help').hidden=true}});
+stage.addEventListener('click',function(e){if(e.target.closest('a'))return;if(e.clientX<innerWidth/3)prev();else next()});
+var tx=null;stage.addEventListener('touchstart',function(e){tx=e.touches[0].clientX},{passive:true});
+stage.addEventListener('touchend',function(e){if(tx==null)return;var dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50){dx<0?next():prev()}tx=null});
+document.getElementById('b-next').onclick=next;document.getElementById('b-prev').onclick=prev;
+var bn=document.getElementById('b-notes');if(bn)bn.onclick=function(){toggle('notes')};document.getElementById('b-full').onclick=full;document.getElementById('b-help').onclick=function(){toggle('help')};
+document.getElementById('help').onclick=function(){this.hidden=true};
+var t;addEventListener('mousemove',function(){document.body.classList.add('ui');clearTimeout(t);t=setTimeout(function(){document.body.classList.remove('ui')},2500)});
+function fromHash(){var n=parseInt(location.hash.slice(1),10);show(isFinite(n)?n-1:0)}
+addEventListener('hashchange',fromHash);fromHash();
+})();
+</script>
+</body>
+</html>

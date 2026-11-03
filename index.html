@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bombas centrífugas · IQ-0432</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:wght@600;700&display=swap">
+<style>
+/* Portada del curso: presentación arriba, herramientas en rejilla, referencias al final. */
+:root{--bg:#f4f3ee;--surface:#fbfaf6;--ink:#13293d;--muted:#4a5866;--line:#dfe2dd;--accent:#1f6b94;--accent-2:#a8501a;--on:#f4f3ee;
+ --f-display:'Source Serif 4',Georgia,serif;--f-body:'IBM Plex Sans',Arial,sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#111c24;--surface:#17232c;--ink:#e8ece9;--muted:#a9b7c0;--line:#2a3a45;--accent:#6fb3dd;--accent-2:#f0a46e;--on:#111c24;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55;padding:40px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+.eyebrow{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2);font-weight:600}
+h1{font-family:var(--f-display);font-size:clamp(34px,5vw,56px);line-height:1.08;margin:8px 0 12px;text-wrap:balance}
+h2{font-family:var(--f-display);font-size:26px;margin:0 0 16px}
+.lead{color:var(--muted);max-width:66ch;margin:0}
+.hero{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;background:var(--ink);color:var(--bg);border-radius:14px;padding:28px 32px}
+.hero p{margin:0;flex:1 1 320px;max-width:60ch}
+.hero b{font-family:var(--f-display);font-size:24px;display:block;margin-bottom:4px}
+.btn{display:inline-block;background:var(--accent-2);color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:10px}
+@media (prefers-color-scheme:dark){.hero{background:var(--surface);color:var(--ink);border:1px solid var(--line)}.btn{color:#111c24}}
+.btn:focus-visible,.tool a:focus-visible{outline:3px solid var(--accent-2);outline-offset:3px}
+.tools{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.tool a{display:flex;flex-direction:column;gap:6px;height:100%;padding:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:12px;color:inherit;text-decoration:none}
+.tool a:hover{border-color:var(--accent)}
+.where{font-size:12.5px;color:var(--accent-2);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.name{font-weight:600;font-size:18px;color:var(--accent)}
+.desc{color:var(--muted);font-size:15px}
+.refs{padding-left:1.2em;margin:0;display:flex;flex-direction:column;gap:8px;font-size:15px;max-width:90ch}
+.refs a{color:var(--accent);word-break:break-word}
+.note{font-size:14px;color:var(--muted);max-width:80ch;margin:12px 0 0}
+kbd{font-family:ui-monospace,monospace;font-size:13px;border:1px solid var(--line);border-radius:4px;padding:0 5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">IQ-0432 · Escuela de Ingeniería Química · Universidad de Costa Rica</span>
+    <h1>Bombas centrífugas: lectura y selección</h1>
+    <p class="lead">Material de clase para leer las curvas de un fabricante y seleccionar una bomba centrífuga, con animaciones y herramientas interactivas.</p>
+  </header>
+  <section class="hero" aria-label="Presentación">
+    <p><b>Presentación de clase</b>39 diapositivas. Avance con <kbd>→</kbd> o con un clic; <kbd>F</kbd> activa la pantalla completa.</p>
+    <a class="btn" href="presentacion/">Abrir la presentación</a>
+  </section>
+  <section aria-labelledby="t-tools">
+    <h2 id="t-tools">Herramientas interactivas</h2>
+    <ul class="tools">
+      <li class="tool"><a href="interactivos/banco-curva.html"><span class="where">Diapositiva 9</span><span class="name">Banco de pruebas de bomba</span><span class="desc">Mueva la válvula de descarga y construya las curvas de cabeza, eficiencia y potencia contra el caudal. Incluye un modo que mide como en el laboratorio.</span></a></li>
+      <li class="tool"><a href="interactivos/mapa-bep.html"><span class="where">Diapositiva 10</span><span class="name">Mapa de eficiencia</span><span class="desc">Diámetros de impulsor, líneas de isoeficiencia, BEP y región preferente, con el NPSH requerido y el empuje radial.</span></a></li>
+      <li class="tool"><a href="interactivos/resistencia.html"><span class="where">Diapositiva 14</span><span class="name">Resistencia y punto de operación</span><span class="desc">Cierre la válvula y compare la potencia y la corriente del motor en una bomba periférica y en una centrífuga.</span></a></li>
+      <li class="tool"><a href="interactivos/centrifuga-vs-periferica.html"><span class="where">Diapositiva 14</span><span class="name">Centrífuga vs. periférica</span><span class="desc">Animación del flujo interno de las dos bombas.</span></a></li>
+      <li class="tool"><a href="interactivos/serie-paralelo.html"><span class="where">Diapositivas 16 a 18</span><span class="name">Bombas en serie y en paralelo</span><span class="desc">El caso teórico paso a paso: la curva se duplica, el punto de operación no.</span></a></li>
+      <li class="tool"><a href="interactivos/diagrama-familia.html"><span class="where">Diapositivas 20 y 29</span><span class="name">Diagrama de familia KDN</span><span class="desc">Cómo leer el diagrama de selección DAB KDN y qué modelos cubren un punto de diseño.</span></a></li>
+      <li class="tool"><a href="interactivos/candidatos-kdn.html"><span class="where">Diapositivas 30 y 31</span><span class="name">Comparar candidatos KDN</span><span class="desc">Las curvas de la KDN 32/125.1 y la 32/125 lado a lado: diámetro graficado, eficiencia, BEP, potencia y NPSH requerido.</span></a></li>
+      <li class="tool"><a href="interactivos/interpolador.html"><span class="where">Diapositiva 34</span><span class="name">Interpolador de curvas</span><span class="desc">Interpole el NPSH requerido y la potencia a partir de los puntos digitalizados con ScanIt.</span></a></li>
+    </ul>
+  </section>
+  <section aria-labelledby="t-refs">
+    <h2 id="t-refs">Referencias</h2>
+    <ol class="refs">
+      <li>AmsterCHEM. (s. f.). <i>ScanIt</i> [Software de digitalización de gráficos]. <a href="https://www.amsterchem.com/downloads.html">https://www.amsterchem.com/downloads.html</a></li>
+      <li>DAB Pumps. (s. f.). <i>Catálogo técnico: electrobombas centrífugas normalizadas serie KDN, 50 Hz</i>. Tabla gráfica de selección a 2900 rpm y hojas KDN 32-125 y KDN 32-125.1 (pp. 142–143). DAB Pumps S.p.A.</li>
+      <li>Faraji, F. et al. (2022). <i>(a) Open impeller, (b) Semi-open impeller, (c) Modified semi-open impeller, (d) Closed impeller</i> [Figura 1]. ResearchGate. <a href="https://www.researchgate.net/profile/Foad-Faraji/publication/361984146/figure/fig1/AS:1177669731385346@1657789752934/a-Open-impeller-b-Semi-open-impeller-c-Modified-Semi-open-impeller-d-Closed.jpg">researchgate.net/publication/361984146</a></li>
+      <li>Gerhart, P. M., Gerhart, A. L. y Hochstein, J. I. (2016). <i>Munson, Young and Okiishi’s Fundamentals of Fluid Mechanics</i> (8.ª ed.). Wiley.</li>
+      <li>Griswold Pumps. (s. f.). <i>Curvas de rendimiento, modelo 4 × 3 − 10 A70</i>: curva G-3613 (3600 rpm) y curva G-1813 (1800 rpm).</li>
+      <li>Hydraulic Institute. (2017). <i>ANSI/HI 9.6.3-2017 Rotodynamic Pumps – Guideline for Allowable Operating Region</i>. Hydraulic Institute.</li>
+      <li>Neptuno Pumps. (2021). <i>Bomba de doble succión de carcasa partida, serie HA</i> y <i>Esquema de bomba multietapa</i> [Imágenes]. <a href="https://neptunopumps.com/">neptunopumps.com</a></li>
+      <li>Seguas. (2019). <i>Bomba centrífuga radial</i> [Imagen]. <a href="https://www.seguas.com/wp-content/uploads/2019/08/bomba-centrifuga-radial.jpg">seguas.com</a></li>
+      <li>Stepanoff, A. J. (1957). <i>Centrifugal and Axial Flow Pumps: Theory, Design, and Application</i> (2.ª ed.). Wiley.</li>
+    </ol>
+    <p class="note">Las figuras de terceros se reproducen con fines docentes y con su fuente indicada en cada diapositiva; los derechos pertenecen a sus autores. Las bombas de las animaciones y de las herramientas interactivas son ficticias o ilustrativas, salvo las curvas DAB KDN, tomadas del catálogo.</p>
+  </section>
+</div>
+</body>
+</html>

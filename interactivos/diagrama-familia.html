@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Diagrama de familia KDN</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap">
+<style>
+/* Layout: diagrama de familia redibujado (log-log) a la izquierda; entrada del punto, unidades y modelos candidatos a la derecha; abajo, cómo leerlo. */
+:root{
+  --bg:#f4f3ee; --surface:#fbfaf6; --sunk:#eceeea; --ink:#13293d; --muted:#4a5866; --line:#dfe2dd; --grid:#e3e6e2; --grid2:#cfd5d1; --edge:#1d1d1b;
+  --accent:#1f6b94; --accent-2:#a8501a; --on-accent:#f4f3ee; --hl:#2a78d6;
+  --f-display:'Source Serif 4', Georgia, serif; --f-body:'IBM Plex Sans', Arial, sans-serif; --f-data:'IBM Plex Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --line:#2a3a45; --grid:#24333d; --grid2:#33454f; --edge:#0b1116;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --hl:#6fb3dd; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#111c24; --surface:#17232c; --sunk:#1d2b35; --ink:#e8ece9; --muted:#a9b7c0; --line:#2a3a45; --grid:#24333d; --grid2:#33454f; --edge:#0b1116;
+  --accent:#6fb3dd; --accent-2:#f0a46e; --on-accent:#111c24; --hl:#6fb3dd; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:16px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); padding-block:28px 48px}
+.wrap{max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:24px}
+header{display:flex; flex-direction:column; gap:8px; max-width:74ch}
+.eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); font-weight:600}
+h1{font-family:var(--f-display); font-weight:700; font-size:clamp(28px,4vw,42px); line-height:1.1; margin:0; text-wrap:balance}
+h2{font-family:var(--f-display); font-weight:600; font-size:22px; margin:0}
+h3{margin:0; font-size:17px}
+.lead{color:var(--muted); margin:0; font-size:17px}
+.grid{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:24px; align-items:start}
+@media (max-width:1000px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:14px; min-width:0}
+svg text{font-family:var(--f-body)}
+#ch{width:100%; height:auto; display:block; touch-action:none; cursor:crosshair}
+.row{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px}
+.fld{display:flex; flex-direction:column; gap:6px; min-width:0}
+.fld label{font-weight:500; font-size:14px}
+.pair{display:flex; gap:6px}
+.pair input{flex:1; min-width:0; font:inherit; font-family:var(--f-data); padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink)}
+.pair select{font:inherit; padding:8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink)}
+button{font:inherit; font-weight:500; border-radius:8px; padding:8px 12px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer}
+button.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--accent-2); outline-offset:2px}
+.btns{display:flex; flex-wrap:wrap; gap:8px}
+.res{display:flex; flex-direction:column; gap:8px}
+.chip{display:inline-flex; align-items:center; gap:8px; font-family:var(--f-data); font-weight:600; font-size:17px; padding:6px 12px; border-radius:999px; background:var(--sunk); border:2px solid var(--hl)}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.note{font-size:14px; color:var(--muted); margin:0}
+.conv{font-family:var(--f-data); font-size:14px; background:var(--sunk); border-radius:8px; padding:10px 12px; line-height:1.7; font-variant-numeric:tabular-nums; overflow-wrap:anywhere}
+.cards{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px}
+@media (max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.cards{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 18px; display:flex; flex-direction:column; gap:6px; min-width:0}
+.card .n{font-family:var(--f-data); color:var(--accent-2); font-weight:600}
+.card p{margin:0; color:var(--muted); font-size:15px}
+.tip{position:absolute; pointer-events:none; background:var(--ink); color:var(--bg); border-radius:6px; padding:4px 8px; font-size:13px; font-family:var(--f-data); white-space:nowrap; transform:translate(-50%,-130%)}
+.chart-box{position:relative}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">IQ-0432 · Diagramas del fabricante</span>
+    <h1>Cómo leer el diagrama de familia DAB KDN</h1>
+    <p class="lead">Ubique un punto de diseño (Q, H) y vea qué modelos lo cubren. El diagrama está redibujado a partir de la tabla gráfica de selección del catálogo, a 2900 rpm.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="t-ch">
+      <h2 id="t-ch">Rango de prestaciones, 2900 rpm</h2>
+      <div class="chart-box">
+        <svg id="ch" viewBox="0 0 720 560" role="img" aria-label="Diagrama de familia de la serie DAB KDN en ejes logarítmicos de caudal y cabeza, con un recuadro por modelo y el punto de diseño elegido"></svg>
+        <div class="tip" id="tip" hidden></div>
+      </div>
+      <p class="note">Haga clic o toque el diagrama para mover el punto. Pase el cursor sobre un recuadro para ver el modelo.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="t-pt">
+      <h2 id="t-pt">Punto de diseño</h2>
+      <div class="row">
+        <div class="fld"><label for="qv">Caudal</label>
+          <div class="pair"><input id="qv" type="text" inputmode="decimal" value="16"><select id="qu" aria-label="Unidad de caudal"><option value="m3h">m³/h</option><option value="ls">l/s</option><option value="lmin">l/min</option><option value="usgpm">US gpm</option><option value="impgpm">IMP gpm</option></select></div></div>
+        <div class="fld"><label for="hv">Cabeza</label>
+          <div class="pair"><input id="hv" type="text" inputmode="decimal" value="19"><select id="hu" aria-label="Unidad de cabeza"><option value="m">m</option><option value="kpa">kPa</option><option value="ft">ft</option></select></div></div>
+      </div>
+      <div class="btns"><button id="b-ej" type="button" class="primary">Ejemplo guiado: 16 m³/h y 19 m</button></div>
+      <div class="conv" id="conv"></div>
+      <div class="res" aria-live="polite">
+        <h3 id="r-t">Modelos que cubren el punto</h3>
+        <div class="chips" id="chips"></div>
+        <p class="note" id="r-n"></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="cards">
+    <article class="card"><span class="n">1 · Ejes</span><h3>Dos escalas logarítmicas</h3><p>Q en horizontal y H en vertical. De 10 a 20 hay la misma distancia que de 20 a 40. El catálogo trae Q en m³/h, l/s, l/min y gpm, y H en m, kPa y ft.</p></article>
+    <article class="card"><span class="n">2 · Recuadros</span><h3>Cada uno es un modelo</h3><p>Marca la zona de Q y H que cubre el modelo con sus distintos impulsores. 32/125: descarga DN 32 e impulsor nominal de 125 mm.</p></article>
+    <article class="card"><span class="n">3 · Punto</span><h3>Cruzar Q con H</h3><p>Si el punto cae en dos recuadros, los dos son candidatos. Luego se revisa la curva de cada modelo y se elige el de mayor eficiencia en el punto.</p></article>
+    <article class="card"><span class="n">4 · Velocidad</span><h3>2900 rpm, 50 Hz</h3><p>Con motores a 60 Hz, unos 3500 rpm, las curvas cambian: se usan las de 60 Hz o se corrige con las leyes de afinidad.</p></article>
+  </div>
+  <p class="note">Fuente: DAB Pumps, catálogo técnico serie KDN, tabla gráfica de selección a 2900 rpm. Recuadros redibujados a partir del PDF del catálogo; para seleccionar en firme, use la hoja de curvas de cada modelo.</p>
+</div>
+
+<script>
+(function(){
+const D={"tiles":[{"n":"100/250","c":"#1d531f","p":[[242,195],[247,193],[253,189],[261,181],[257,166],[234,179]]},{"n":"100/200","c":"#1d531f","p":[[239,177],[246,175],[253,171],[258,166],[261,160],[253,132],[249,140],[244,147],[231,160]]},{"n":"80/315","c":"#416b39","p":[[182,211],[185,219],[204,219],[219,216],[229,212],[236,207],[241,200],[243,193],[231,182]]},{"n":"65/315","c":"#416b39","p":[[175,195],[182,216],[184,216],[202,215],[219,210],[231,204],[236,200],[240,195],[233,191]]},{"n":"80/250","c":"#416b39","p":[[175,193],[179,200],[215,199],[224,197],[232,194],[239,190],[245,185],[236,170],[186,184]]},{"n":"80/200","c":"#416b39","p":[[219,179],[227,177],[234,174],[239,170],[243,165],[235,146],[207,157],[217,179]]},{"n":"80/160","c":"#416b39","p":[[213,158],[224,155],[232,150],[237,145],[244,134],[238,96],[230,111],[226,117],[218,122],[209,124],[209,157]]},{"n":"65/250","c":"#638558","p":[[167,197],[190,196],[205,193],[216,188],[220,185],[221,182],[215,172],[180,181]]},{"n":"65/200","c":"#638558","p":[[205,179],[214,174],[221,169],[210,150],[197,157]]},{"n":"65/160","c":"#638558","p":[[202,157],[208,154],[213,151],[217,146],[220,140],[220,136],[212,126],[197,136]]},{"n":"65/125","c":"#638558","p":[[199,136],[205,133],[211,129],[216,124],[220,118],[208,90],[203,99],[196,105],[194,128]]},{"n":"50/250","c":"#87a17d","p":[[147,195],[148,198],[170,197],[184,194],[196,190],[202,185],[206,178],[203,163],[151,187]]},{"n":"50/200","c":"#87a17d","p":[[182,177],[189,176],[195,173],[201,168],[205,164],[206,163],[201,150],[180,158]]},{"n":"50/160","c":"#87a17d","p":[[186,159],[197,156],[204,151],[197,128],[177,135],[180,155]]},{"n":"50/125","c":"#87a17d","p":[[179,137],[187,135],[194,131],[200,126],[204,121],[193,96],[190,100],[185,105],[173,112],[173,121]]},{"n":"40/250","c":"#aec0a5","p":[[117,178],[126,196],[145,196],[163,193],[176,190],[181,187],[184,185],[181,164]]},{"n":"40/200","c":"#aec0a5","p":[[125,179],[153,177],[166,175],[173,172],[178,168],[183,164],[187,159],[180,150],[121,167]]},{"n":"40/160","c":"#aec0a5","p":[[132,163],[148,162],[162,160],[174,155],[183,149],[184,149],[175,125],[133,139]]},{"n":"40/125","c":"#aec0a5","p":[[131,140],[145,139],[158,136],[168,132],[177,125],[170,95],[167,100],[162,104],[156,108],[150,111]]},{"n":"32/200","c":"#d5ded1","p":[[70,176],[70,179],[121,179],[139,177],[151,174],[160,169],[167,163],[170,156],[93,165]]},{"n":"32/200.1","c":"#d5ded1","p":[[66,159],[70,178],[107,177],[119,174],[129,168],[137,161],[143,150],[141,148]]},{"n":"32/160","c":"#d5ded1","p":[[109,158],[123,157],[134,153],[144,147],[148,143],[150,140],[148,137],[110,141]]},{"n":"32/160.1","c":"#d5ded1","p":[[62,161],[94,160],[111,158],[127,153],[134,149],[138,146],[134,137],[58,142]]},{"n":"32/125","c":"#d5ded1","p":[[57,140],[58,144],[109,143],[130,141],[138,139],[144,136],[151,131],[158,123],[145,100],[141,108],[139,111],[135,113],[115,121]]},{"n":"32/125.1","c":"#d5ded1","p":[[48,116],[54,143],[92,142],[113,139],[126,135],[134,130],[140,125],[130,87],[126,95],[120,101],[114,107],[105,111],[96,113],[83,115]]}],"labels":{"32/160.1":[88,151],"32/125.1":[102,125],"32/200.1":[98,169],"32/200":[148,169],"32/125":[148,123],"32/160":[142,142],"40/125":[167,119],"40/200":[177,162],"40/160":[169,145],"40/250":[163,185],"50/125":[189,119],"50/200":[194,165],"50/250":[194,182],"50/160":[192,146],"65/125":[210,113],"65/160":[210,141],"65/200":[211,167],"65/250":[213,182],"65/315":[214,205],"80/160":[231,133],"80/200":[231,162],"80/250":[231,185],"80/315":[225,213],"100/200":[252,158],"100/250":[252,180]}};
+const $=id=>document.getElementById(id);
+const fmt=(x,d)=>x.toLocaleString('es-CR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const NS='http://www.w3.org/2000/svg', svg=$('ch');
+const X0=70,X1=700,Y0=20,Y1=490,U0=30.1,U1=269.9,V0=77.8,V1=220.4;
+const px=u=>X0+(X1-X0)*(u-U0)/(U1-U0), py=v=>Y1-(Y1-Y0)*(v-V0)/(V1-V0);
+const ux=x=>U0+(x-X0)/(X1-X0)*(U1-U0), vy=y=>V0+(Y1-y)/(Y1-Y0)*(V1-V0);
+const lq=q=>100*Math.log10(q);
+const QF={m3h:1,ls:1/3.6,lmin:1000/60,usgpm:4.40287,impgpm:3.66615}, HF={m:1,kpa:9.80665,ft:3.28084};
+const QN={m3h:'m³/h',ls:'l/s',lmin:'l/min',usgpm:'US gpm',impgpm:'IMP gpm'}, HN={m:'m',kpa:'kPa',ft:'ft'};
+let Q=16,H=19, FK=1;
+function el(tag,a,p,txt){ if(typeof p==='string'){ txt=p; p=null; } const e=document.createElementNS(NS,tag); for(const k in a) e.setAttribute(k,k==='font-size'?(+a[k]*FK).toFixed(1):a[k]); if(txt!=null) e.textContent=txt; (p||svg).appendChild(e); return e; }
+function pip(x,y,poly){ let ins=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const [x1,y1]=poly[i],[x2,y2]=poly[j]; if((y1>y)!==(y2>y)&&x<x1+(y-y1)*(x2-x1)/(y2-y1)) ins=!ins; } return ins; }
+const dark=c=>['#1d531f','#416b39','#638558'].includes(c);
+function hits(){ const u=lq(Q), v=lq(H); return D.tiles.filter(t=>pip(u,v,t.p)).map(t=>t.n); }
+function draw(){ svg.innerHTML=''; FK=(svg.clientWidth&&svg.clientWidth<560)?1.45:1; const hit=hits();
+  [1,10,100,1000].forEach(dec=>{ for(let m=1;m<10;m++){ const u=lq(dec*m); if(u<U0-.1||u>U1+.1) continue; el('line',{x1:px(u),x2:px(u),y1:Y0,y2:Y1,stroke:m===1?'var(--grid2)':'var(--grid)'}); } });
+  [1,10,100].forEach(dec=>{ for(let m=1;m<10;m++){ const v=lq(dec*m); if(v<V0-.1||v>V1+.1) continue; el('line',{x1:X0,x2:X1,y1:py(v),y2:py(v),stroke:m===1?'var(--grid2)':'var(--grid)'}); } });
+  [2,5,10,20,50,100,200,500].forEach(q=>el('text',{x:px(lq(q)),y:Y1+20,'text-anchor':'middle','font-size':12.5,fill:'var(--muted)'},String(q)));
+  [10,20,50,100,150].forEach(h=>el('text',{x:X0-8,y:py(lq(h))+4,'text-anchor':'end','font-size':12.5,fill:'var(--muted)'},String(h)));
+  el('text',{x:(X0+X1)/2,y:Y1+44,'text-anchor':'middle','font-size':14,fill:'var(--ink)'},'Caudal Q (m³/h)');
+  el('text',{x:X0-8,y:Y0-6,'text-anchor':'end','font-size':13,'font-weight':600,fill:'var(--ink)'},'H (m)');
+  const g=el('g',{});
+  D.tiles.forEach(t=>{ const on=hit.includes(t.n); const p=el('path',{d:t.p.map((a,i)=>(i?'L':'M')+px(a[0]).toFixed(1)+' '+py(a[1]).toFixed(1)).join('')+'Z',fill:t.c,stroke:'var(--edge)','stroke-width':1.2,opacity:hit.length&&!on?0.45:1,'data-n':t.n},g); });
+  hit.forEach(n=>{ const t=D.tiles.find(x=>x.n===n); el('path',{d:t.p.map((a,i)=>(i?'L':'M')+px(a[0]).toFixed(1)+' '+py(a[1]).toFixed(1)).join('')+'Z',fill:'none',stroke:'var(--hl)','stroke-width':3.5}); });
+  const boxes=[]; const order=Object.keys(D.labels).sort((a,b)=>(hit.includes(b)?1:0)-(hit.includes(a)?1:0));
+  order.forEach(n=>{ const L=D.labels[n], x=px(L[0]), y=py(L[1]), w=n.length*6.6*FK+6, bx=[x-w/2,y-8*FK,x+w/2,y+8*FK]; if(boxes.some(b=>bx[0]<b[2]&&bx[2]>b[0]&&bx[1]<b[3]&&bx[3]>b[1])) return; boxes.push(bx);
+    const t=D.tiles.find(x=>x.n===n); el('text',{x,y:y+4,'text-anchor':'middle','font-size':11.5,'font-weight':600,fill:t&&dark(t.c)?'#f4f3ee':'#13293d',opacity:hit.length&&!hit.includes(n)?0.5:1,'pointer-events':'none'},n); });
+  if(Q>0&&H>0){ const x=px(lq(Q)), y=py(lq(H)); if(x>=X0&&x<=X1&&y>=Y0&&y<=Y1){
+    el('line',{x1:x,x2:x,y1:y,y2:Y1,stroke:'var(--ink)','stroke-dasharray':'5 5','stroke-width':1.6}); el('line',{x1:X0,x2:x,y1:y,y2:y,stroke:'var(--ink)','stroke-dasharray':'5 5','stroke-width':1.6});
+    el('circle',{cx:x,cy:y,r:8,fill:'var(--ink)',stroke:'var(--surface)','stroke-width':3}); } }
+  el('rect',{x:X0,y:Y0,width:X1-X0,height:Y1-Y0,fill:'transparent',id:'hit'});
+  wire(); }
+function wire(){ const hitEl=$('hit'), tip=$('tip'), box=svg.parentNode;
+  const loc=e=>{ const r=svg.getBoundingClientRect(), k=r.width/720; return [(e.clientX-r.left)/k,(e.clientY-r.top)/k,r,k]; };
+  hitEl.addEventListener('pointerdown',e=>{ const [x,y]=loc(e); Q=Math.pow(10,ux(x)/100); H=Math.pow(10,vy(y)/100); syncInputs(); update(); });
+  hitEl.addEventListener('pointermove',e=>{ const [x,y,r,k]=loc(e); const u=ux(x), v=vy(y); let top=null; D.tiles.forEach(t=>{ if(pip(u,v,t.p)) top=t.n; });
+    if(!top){ tip.hidden=true; return; } const bx=box.getBoundingClientRect(); tip.textContent=top+' · '+fmt(Math.pow(10,u/100),1)+' m³/h, '+fmt(Math.pow(10,v/100),1)+' m'; tip.hidden=false; tip.style.left=(r.left-bx.left+x*k)+'px'; tip.style.top=(r.top-bx.top+y*k)+'px'; });
+  hitEl.addEventListener('pointerleave',()=>{ tip.hidden=true; }); }
+function num(s){ const v=parseFloat(String(s).replace(',','.')); return isFinite(v)?v:NaN; }
+function syncInputs(){ const qu=$('qu').value, hu=$('hu').value; $('qv').value=fmt(Q*QF[qu],qu==='lmin'?0:1); $('hv').value=fmt(H*HF[hu],hu==='kpa'?0:1); }
+function readInputs(){ const q=num($('qv').value)/QF[$('qu').value], h=num($('hv').value)/HF[$('hu').value]; if(q>0&&h>0){ Q=q; H=h; update(); } }
+function update(){ const hit=hits();
+  $('conv').innerHTML='Q = '+fmt(Q,1)+' m³/h = '+fmt(Q/3.6,2)+' l/s = '+fmt(Q*1000/60,0)+' l/min = '+fmt(Q*4.40287,1)+' US gpm<br>H = '+fmt(H,1)+' m = '+fmt(H*9.80665,0)+' kPa = '+fmt(H*3.28084,1)+' ft';
+  $('chips').innerHTML=hit.map(n=>'<span class="chip">'+n+'</span>').join('');
+  $('r-n').textContent= hit.length===0 ? 'Ningún modelo de la serie cubre este punto a 2900 rpm. Revise otra serie o la velocidad.' : hit.length===1 ? 'Un solo candidato: revise su hoja de curvas para elegir el impulsor.' : 'Varios candidatos: compare la eficiencia de cada uno en el punto, en su hoja de curvas.';
+  draw(); }
+$('qv').addEventListener('change',readInputs); $('hv').addEventListener('change',readInputs);
+$('qu').addEventListener('change',syncInputs); $('hu').addEventListener('change',syncInputs);
+$('b-ej').addEventListener('click',()=>{ Q=16; H=19; syncInputs(); update(); });
+let rw=0; addEventListener('resize',()=>{ clearTimeout(rw); rw=setTimeout(draw,150); });
+update();
+})();
+</script>
+</body>
+</html>
