@@ -122,9 +122,9 @@ tr.na td{color:var(--muted)}
     <div class="ctl" style="flex:0 1 auto">
       <span class="lab">Tipo de sistema</span>
       <div class="seg" role="group" aria-label="Tipo de sistema" id="presets">
-        <button type="button" data-p="steep" aria-pressed="false">Mucha fricción</button>
+        <button type="button" data-p="steep" aria-pressed="false">Empinado</button>
         <button type="button" data-p="mid" aria-pressed="true">Intermedio</button>
-        <button type="button" data-p="flat" aria-pressed="false">Estática alta</button>
+        <button type="button" data-p="flat" aria-pressed="false">Plano</button>
       </div>
     </div>
     <div class="ctl">
@@ -177,7 +177,7 @@ tr.na td{color:var(--muted)}
       <h3 style="color:var(--s1)">En serie: la descarga de una entra a la succión de la otra</h3>
       <ul>
         <li>Pasa el mismo caudal por las dos y cada una aporta su cabeza: H<sub>serie</sub>(Q) = 2 H(Q).</li>
-        <li>Rinde más en sistemas empinados (mucha fricción) o con una cabeza estática mayor que la de cierre de una sola bomba.</li>
+        <li>Rinde más en sistemas empinados, donde domina la fricción, aunque lo que se busque sea más caudal. También cuando la cabeza estática supera la de cierre de una sola bomba.</li>
         <li>Cada bomba opera al caudal total y a la mitad de la cabeza total.</li>
         <li>La carcasa de la segunda bomba trabaja a mayor presión: hay que revisar su presión máxima de diseño y la de los sellos.</li>
       </ul>
@@ -186,7 +186,7 @@ tr.na td{color:var(--muted)}
       <h3 style="color:var(--s2)">En paralelo: las dos toman y descargan en los mismos cabezales</h3>
       <ul>
         <li>Las dos dan la misma cabeza y se reparten el caudal: Q<sub>paralelo</sub>(H) = 2 Q(H).</li>
-        <li>Rinde más en sistemas planos (cabeza estática alta y poca fricción). Si la cabeza estática supera la de cierre, no entrega nada.</li>
+        <li>Rinde más en sistemas planos, donde domina la cabeza estática y la fricción es poca. Una cabeza estática alta no basta: si la fricción también es alta, el sistema es empinado. Si la cabeza estática supera la de cierre, no entrega nada.</li>
         <li>Cada bomba opera a la mitad del caudal total, más cerca del cierre: puede quedar lejos de su BEP.</li>
         <li>Cada bomba necesita su válvula de retención, para que el flujo no se devuelva por la que esté apagada.</li>
       </ul>
@@ -265,7 +265,7 @@ function message(o){ let t,d;
   else if(!o.ser){ t='Ningún arreglo vence la cabeza estática.'; d='Δz = '+fmt(HS,1)+' m es mayor que la cabeza de cierre de dos bombas en serie (44 m).'; }
   else { const gs=(o.ser.Q-o.one.Q)/o.one.Q*100, gp=(o.par.Q-o.one.Q)/o.one.Q*100;
     t= gs>gp+1 ? 'En este sistema rinde más el arreglo en serie.' : gp>gs+1 ? 'En este sistema rinde más el arreglo en paralelo.' : 'En este sistema los dos arreglos dan casi el mismo caudal.';
-    d='Con una bomba, '+fmt(o.one.Q,0)+' L/min. En serie el caudal sube '+fmt(gs,0)+' % y en paralelo '+fmt(gp,0)+' %: ninguno lo duplica, porque la curva del sistema sube con Q². '+(gp>gs?'Aquí la curva del sistema es más plana que la de la bomba: sumar caudales a la misma cabeza aprovecha mejor la segunda bomba.':'Aquí la curva del sistema es más empinada que la de la bomba: sumar cabezas al mismo caudal aprovecha mejor la segunda bomba.')+' Revise también la η de cada bomba: el arreglo cambia dónde opera cada una.'; }
+    d='Con una bomba, '+fmt(o.one.Q,0)+' L/min. En serie el caudal sube '+fmt(gs,0)+' % y en paralelo '+fmt(gp,0)+' %: ninguno lo duplica, porque la curva del sistema sube con Q². '+(gp>gs?'Aquí la curva del sistema es más plana que la de la bomba: sumar caudales a la misma cabeza aprovecha mejor la segunda bomba.':'Aquí la curva del sistema es más empinada que la de la bomba: sumar cabezas al mismo caudal aprovecha mejor la segunda bomba. Aunque lo que se busque sea caudal, aquí la serie da más.')+' Revise también la η de cada bomba: el arreglo cambia dónde opera cada una.'; }
   $('m-t').textContent=t; $('m-d').textContent=d; }
 function update(){ $('hs-o').textContent=fmt(HS,1)+' m'; $('kk-o').textContent=fmt(K*1e4,1)+' × 10⁻⁴';
   const o=ops(); draw(o); table(o); message(o); }

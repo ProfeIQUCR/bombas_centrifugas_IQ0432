@@ -643,11 +643,11 @@ requestAnimationFrame(frame);if(red)frame(0);
     <div style="display:flex; flex-direction:column; gap:20px; width:650px; flex:none">
       <div style="display:flex; flex-direction:column; gap:10px; padding:24px 32px; background:#fbfaf6; border-top:6px solid #1f6b94; border-radius:12px">
         <h3 style="font-size:32px; font-weight:600; color:#1f6b94">Sistema empinado → serie</h3>
-        <p style="font-size:26px; line-height:1.4; color:#4a5866">Mucha fricción: tuberías largas o angostas, muchos accesorios.</p>
+        <p style="font-size:26px; line-height:1.4; color:#4a5866">Domina la fricción. Aunque se busque más caudal, la serie da más.</p>
       </div>
       <div style="display:flex; flex-direction:column; gap:10px; padding:24px 32px; background:#fbfaf6; border-top:6px solid #a8501a; border-radius:12px">
         <h3 style="font-size:32px; font-weight:600; color:#a8501a">Sistema plano → paralelo</h3>
-        <p style="font-size:26px; line-height:1.4; color:#4a5866">Cabeza estática alta y poca fricción; también demanda variable.</p>
+        <p style="font-size:26px; line-height:1.4; color:#4a5866">Domina la cabeza estática y la fricción es poca.</p>
       </div>
       <div style="display:flex; flex-direction:column; gap:10px; padding:24px 32px; background:#13293d; border-radius:12px">
         <h3 style="font-size:32px; font-weight:600; color:#f0a46e">Δz mayor que el cierre → solo serie</h3>
@@ -664,7 +664,7 @@ var BG=&#x27;#fbfaf6&#x27;,INK=&#x27;#13293d&#x27;,MU=&#x27;#4a5866&#x27;,LN=&#x
 function size(){var d=window.devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;var k=Math.min(innerWidth/W,innerHeight/H);cx.setTransform(k*d,0,0,k*d,0,0)}
 size();addEventListener(&#x27;resize&#x27;,size);
 var QM=150.4;function H1(q){return 22-9.722e-4*q*q}
-var CASES=[{n:&#x27;Mucha fricción&#x27;,d:&#x27;Δz = 2 m, K alto&#x27;,hs:2,K:2e-3},{n:&#x27;Cabeza estática alta&#x27;,d:&#x27;Δz = 16 m, poca fricción&#x27;,hs:16,K:1.2e-4},{n:&#x27;Estática muy alta&#x27;,d:&#x27;Δz = 26 m (cierre: 22 m)&#x27;,hs:26,K:2e-4}];
+var CASES=[{n:&#x27;Sistema empinado&#x27;,d:&#x27;Domina la fricción&#x27;,d2:&#x27;Δz = 2 m, K alto&#x27;,hs:2,K:2e-3},{n:&#x27;Sistema plano&#x27;,d:&#x27;Domina la estática&#x27;,d2:&#x27;Δz = 16 m, poca fricción&#x27;,hs:16,K:1.2e-4},{n:&#x27;Estática muy alta&#x27;,d:&#x27;Δz = 26 m (cierre: 22 m)&#x27;,hs:26,K:2e-4}];
 function solve(f,a,b){if(f(a)&lt;=0)return null;for(var i=0;i&lt;50;i++){var c=(a+b)/2;if(f(c)&gt;0)a=c;else b=c}return(a+b)/2}
 function ops(hs,K){var s=function(q){return hs+K*q*q};return{one:solve(function(q){return H1(q)-s(q)},0,QM),ser:solve(function(q){return 2*H1(q)-s(q)},0,QM),par:solve(function(q){return H1(q/2)-s(q)},0,2*QM),s:s}}
 var X0=72,X1=620,Y0=34,Y1=488;function sx(q){return X0+(X1-X0)*q/320}function sy(h){return Y1-(Y1-Y0)*Math.max(0,Math.min(46,h))/46}
@@ -688,11 +688,11 @@ function frame(now){
  if(o.one)dot(o.one,o.s(o.one),S3);if(o.ser)dot(o.ser,o.s(o.ser),S1);if(o.par)dot(o.par,o.s(o.par),S2);
  // panel
  var PX=652,PW=298,L=PX+22,R=PX+PW-22;cx.fillStyle=SUNK;rr(PX,24,PW,532,12);cx.fill();
- t(&#x27;Caso &#x27;+(ci+1)+&#x27; de 3&#x27;,L,62,22,MU);t(c.n,L,98,26,INK,&#x27;left&#x27;,700);t(c.d,L,130,22,MU);
+ t(&#x27;Caso &#x27;+(ci+1)+&#x27; de 3&#x27;,L,62,22,MU);t(c.n,L,98,26,INK,&#x27;left&#x27;,700);t(c.d,L,130,22,MU);if(c.d2)t(c.d2,L,156,20,MU);
  if(lt&gt;1100){var oc=ops(c.hs,c.K);
   if(oc.one){var gs=(oc.ser/oc.one-1)*100,gp=(oc.par/oc.one-1)*100,mx=80;
-   t(&#x27;Caudal frente a 1 bomba&#x27;,L,184,22,INK,&#x27;left&#x27;,600);
-   [[&#x27;Serie&#x27;,gs,S1],[&#x27;Paralelo&#x27;,gp,S2]].forEach(function(r,i){var y=226+i*74;t(r[0],L,y,22,INK);t(&#x27;+&#x27;+n(r[1],0)+&#x27; %&#x27;,R,y,24,INK,&#x27;right&#x27;,600,MO);
+   t(&#x27;Caudal frente a 1 bomba&#x27;,L,196,22,INK,&#x27;left&#x27;,600);
+   [[&#x27;Serie&#x27;,gs,S1],[&#x27;Paralelo&#x27;,gp,S2]].forEach(function(r,i){var y=238+i*74;t(r[0],L,y,22,INK);t(&#x27;+&#x27;+n(r[1],0)+&#x27; %&#x27;,R,y,24,INK,&#x27;right&#x27;,600,MO);
     cx.fillStyle=TRK;rr(L,y+12,PW-44,16,8);cx.fill();cx.fillStyle=r[2];rr(L,y+12,Math.max(16,(PW-44)*Math.min(1,r[1]/mx)),16,8);cx.fill()});
    var win=gs&gt;gp?&#x27;serie&#x27;:&#x27;paralelo&#x27;;t(&#x27;Conviene: &#x27;+win,L,404,26,INK,&#x27;left&#x27;,700);
    var why=gs&gt;gp?[&#x27;El sistema es empinado:&#x27;,&#x27;sumar cabezas al mismo&#x27;,&#x27;caudal rinde más.&#x27;]:[&#x27;El sistema es casi plano:&#x27;,&#x27;sumar caudales a la misma&#x27;,&#x27;cabeza rinde más.&#x27;];
